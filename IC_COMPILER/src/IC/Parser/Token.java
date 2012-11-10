@@ -19,13 +19,12 @@ public class Token extends Symbol {
 	}
 
 	public String toString() {
-		String symName = IC.Parser.sym.getTerminalName(this.sym);
+		String symName = IC.Parser.sym.getSymbolName(this.sym);
 
-		String str;
-		if (this.value == null) {
-			str = this.left + symName;
-		} else {
-			str = this.left + ": " + symName + "(" + value + ")";
+		String str = this.left + ": " + symName;
+		if (value != null) {
+			String valueStr = value.toString();
+			str += "(" + valueStr + ")";
 		}
 		return str;
 	}
