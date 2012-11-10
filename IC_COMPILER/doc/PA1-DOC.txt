@@ -1,0 +1,19 @@
+compilation project documentation:exercise 1;
+in this exercise we implemented  lexical analysis to the IC language
+the project consists of 
+A IC.package Parser,in charge of parsing an input file, in our case preforming lexical analysis. 
+The parser consists of 
+IC.lex
+sym.java
+Token.java
+LexicalError.java
+
+And a main executable file Compiler.java, running the Main procedure
+
+
+>IC.lex in IC.Parser package is to be used by the Jflex tool to create the file lexer.java,
+where it is use to parse the input file into tokens 
+>sym.java in IC.Parser is a class implementing the different Token ID's and converting a Token Type to string.
+>Token.java in IC.Parser is a class implementing a single Token, inheriting from the Symbol class
+>LexicalError.java in IC.Parser is a class handling a printing lexical analysis errors
+
