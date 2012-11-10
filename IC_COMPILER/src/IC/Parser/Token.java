@@ -1,9 +1,5 @@
 package IC.Parser;
 
-import java.lang.reflect.Field;
-import java.util.HashMap;
-import java.util.Map;
-
 import java_cup.runtime.Symbol;
 
 /**
