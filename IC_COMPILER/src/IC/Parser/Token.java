@@ -1,5 +1,9 @@
 package IC.Parser;
 
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+
 import java_cup.runtime.Symbol;
 
 /**
@@ -19,16 +23,14 @@ public class Token extends Symbol {
 	}
 
 	public String toString() {
+		String symName = IC.Parser.sym.getTerminalName(this.sym);
+
 		String str;
 		if (this.value == null) {
-			str = this.left + this.symAsString();
+			str = this.left + symName;
 		} else {
-			str = this.left + ": " + this.symAsString() + "(" + value + ")";
+			str = this.left + ": " + symName + "(" + value + ")";
 		}
 		return str;
-	}
-
-	public String symAsString() {
-		return "";
 	}
 }
