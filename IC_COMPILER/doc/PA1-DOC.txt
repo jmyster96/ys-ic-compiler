@@ -21,5 +21,12 @@ in the IC package we have
 	in IC is the main executable file  running the Main procedure
 
 
-testing strategy
+Testing Strategy
+===================
+
+
+Regular Expressions
+===================
+- ...
+
 
