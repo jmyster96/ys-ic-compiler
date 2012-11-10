@@ -1,32 +1,37 @@
-			compilation project documentation:exercise 1
+				compilation project documentation:exercise 1
 
 Summery: in this exercise we implemented lexical analysis to the IC language.
 
-			Class hierarchy, a brief descriptions of the major classes
+				Class hierarchy, a brief descriptions of the major classes
 the project consists of 
 A IC.Parser package ,in charge of parsing an input file, in our case preforming lexical analysis. 
 The parser consists of:
 >IC.lex
 	in IC.Parser package is to be used by the Jflex tool to create the file lexer.java,
-	where it is use to parse the input file into tokens 
+	where it is use to parse the input file into tokens
 >sym.java
-	in IC.Parser is a class implementing the different Token ID's and converting a Token Type to string.
+	in IC.Parser: a class implementing the different Token ID's and converting a Token Type to string.
 >Token.java
-	in IC.Parser is a class implementing a single Token, inheriting from the Symbol class
+	in IC.Parser: a class implementing a single Token, inheriting from the Symbol class
 >LexicalError.java
-	in IC.Parser is a class handling a printing lexical analysis errors
+	in IC.Parser: a class handling a printing lexical analysis errors
 
 in the IC package we have 
->Compiler.java,
-	in IC is the main executable file  running the Main procedure
+>Compiler.java
+	in IC package: the main file running the Main procedure, 
+	in this as printing to the screen the token description.
+	The tokens are printed in the flowing format:
+		LINE: ID(VALUE)
+	If the value of a token is a constant than its value (ergo "(VALUE)") will not be printed	
 
+						testing strategy
+Testing was done as part of the development strategy, 
+As every part of the lexer was implemented, it was test separately.   
+in addition whole programs in IC language were parsed and diffed against expected results.
 
-Testing Strategy
-===================
 
 
 Regular Expressions
-===================
-- ...
+
 
 
