@@ -13,8 +13,7 @@ public class Compiler {
 	}
 	Token tkn;
 	try {
-	    FileReader txtFile = new FileReader(args[0]); // may throw i/o
-	    // exception
+	    FileReader txtFile = new FileReader(args[0]); 
 	    Lexer lexer = new Lexer(txtFile);
 	    do {
 		tkn = lexer.next_token();
