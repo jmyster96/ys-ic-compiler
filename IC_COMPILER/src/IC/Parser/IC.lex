@@ -26,12 +26,17 @@ import java.lang.Math;
 
 /* Macros */
 DIGIT = [0-9]
-NUMBER_LITERAL = [0]|[1-9]({DIGIT})*
 LOWER_LETTER = [a-z]
 UPPER_LETTER = [A-Z]
 LETTER = {LOWER_LETTER}|{UPPER_LETTER}|[_]
 ALPHA_NUMERIC = {DIGIT}|{LETTER}
 WHITESPACE = [ \t\f\r\n]
+
+/* Macros: 'complicated' regexs */
+INTEGER_LITERAL = [0]|[1-9]({DIGIT})*
+ILLEGAL_IDENTIFIER = (({DIGIT})+)({LETTER})+
+CLASS_IDENTIFIER = {UPPER_LETTER}({ALPHA_NUMERIC})*
+IDENTIFIER = {LOWER_LETTER}({ALPHA_NUMERIC})*
 
 /* 
    Valid string chars are: ASCII chars 32 - 126, except \ and ". 
@@ -39,6 +44,7 @@ WHITESPACE = [ \t\f\r\n]
 */
 VALID_ASCII_CHARS = [ !#-\[\]-~]
 VALID_STRING_CHARS = "\\\\"|"\\\""|"\\t"|"\\n"|{VALID_ASCII_CHARS}
+QUOTED_STRING = [\"]({VALID_STRING_CHARS})*[\"]
 
 %%
 
@@ -65,10 +71,6 @@ VALID_STRING_CHARS = "\\\\"|"\\\""|"\\t"|"\\n"|{VALID_ASCII_CHARS}
 <YYINITIAL> ";" { return new Token(sym.SEMI, yyline); }
 <YYINITIAL> "." { return new Token(sym.DOT, yyline); }
 <YYINITIAL> "," { return new Token(sym.COMMA, yyline); }
-/* Quotes: starts and ends with a ", other valid chars in the middle. */
-<YYINITIAL> [\"]({VALID_STRING_CHARS})*[\"] {
-  return new Token(sym.QUOTE, yyline, yytext());
-}
 
 
 /* Keywords */
@@ -115,9 +117,14 @@ VALID_STRING_CHARS = "\\\\"|"\\\""|"\\t"|"\\n"|{VALID_ASCII_CHARS}
 <YYINITIAL> "||" { return new Token(sym.LOR, yyline); }
 
 
-/* Stuff that have text in them */
+/* The more interesting stuff */
 
-<YYINITIAL> {NUMBER_LITERAL} {
+/* Quotes: starts and ends with a ", other valid chars in the middle. */
+<YYINITIAL> {QUOTED_STRING} {
+  return new Token(sym.QUOTE, yyline, yytext());
+}
+
+<YYINITIAL> {INTEGER_LITERAL} {
   if (Math.abs(Long.parseLong(yytext())) >= (long)(Math.pow(2, 31))) {
     throw new LexicalError("Integer out of bounds", yyline, yytext());
   } else {
@@ -126,16 +133,16 @@ VALID_STRING_CHARS = "\\\\"|"\\\""|"\\t"|"\\n"|{VALID_ASCII_CHARS}
 }
 
 /* Explicitly disallow illegal identifiers. */
-<YYINITIAL> (({DIGIT})+)({LETTER})+ {
+<YYINITIAL> {ILLEGAL_IDENTIFIER} {
   throw new LexicalError("A number follower by a letter is illegal", yyline, yytext());
 }
 
 /* Class identifiers start with an uppercase letter,
    regular identifiers start with a lowercase letter. */ 
-<YYINITIAL> {UPPER_LETTER}({ALPHA_NUMERIC})* {
+<YYINITIAL> {CLASS_IDENTIFIER} {
   return new Token(sym.CLASS_ID, yyline, yytext());
 }
-<YYINITIAL> {LOWER_LETTER}({ALPHA_NUMERIC})* { return new Token(sym.ID, yyline, yytext()); }
+<YYINITIAL> {IDENTIFIER} { return new Token(sym.ID, yyline, yytext()); }
 
 /* Any other character must be an error. */
 <YYINITIAL> . { throw new LexicalError("illegal character", yyline, yytext()); }

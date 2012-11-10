@@ -1,20 +1,28 @@
-				compilation project documentation:exercise 1
+_________________________________
+Compilation project documentation
+Exercise 1
+=================================
 
-Summery: in this exercise we implemented lexical analysis to the IC language.
+Summary: In this exercise we implemented lexical analysis to the IC language.
 
-				Class hierarchy, a brief descriptions of the major classes
-the project consists of 
-A IC.Parser package ,in charge of parsing an input file, in our case preforming lexical analysis. 
+Class hierarchy: a brief descriptions of the major classes
+===============
+
+The project consists of a IC.Parser package, in charge of parsing an input
+file, in our case performing lexical analysis. 
+
 The parser consists of:
 >IC.lex
-	in IC.Parser package is to be used by the Jflex tool to create the file lexer.java,
-	where it is use to parse the input file into tokens
+	in IC.Parser package is to be used by the Jflex tool to create the file Lexer.java,
+	where it is use to parse the input file into tokens.
 >sym.java
-	in IC.Parser: a class implementing the different Token ID's and converting a Token Type to string.
+	in IC.Parser: a class implementing the different Token ID's and converting
+	a Token Type to string.
 >Token.java
-	in IC.Parser: a class implementing a single Token, inheriting from the Symbol class
+	in IC.Parser: a class implementing a single Token, inheriting from the Symbol
+	class.
 >LexicalError.java
-	in IC.Parser: a class handling a printing lexical analysis errors
+	in IC.Parser: a class handling printing lexical analysis errors
 
 in the IC package we have 
 >Compiler.java
@@ -22,16 +30,67 @@ in the IC package we have
 	in this as printing to the screen the token description.
 	The tokens are printed in the flowing format:
 		LINE: ID(VALUE)
-	If the value of a token is a constant than its value (ergo "(VALUE)") will not be printed	
+	If the value of a token is a constant than its value (ergo "(VALUE)")
+	will not be printed	.
 
-						testing strategy
+Testing Strategy
+================
 Testing was done as part of the development strategy, 
 As every part of the lexer was implemented, it was test separately.   
-in addition whole programs in IC language were parsed and diffed against expected results.
+In addition whole programs in IC language were parsed and diff-ed
+against expected results.
+We used the supplied programs and compared with the supplied output,
+and in addition did our own test cases (as you can see in test/ directory).
+
+IC.lex: detailed documentation
+==============================
+The lexer identifies the tokens. In addition, it identifies comments.
+Everything which is not a recognized token raises a LexicalError.
+
+The tokens consist of the easy stuff (their regular expressions
+are not mentioned because they are trivial):
+  - Punctuation marks ()[]{};.,
+  - Keywords (as in the spec)
+  - Operators: binary / unary / conditionals / assignment
+
+..and the more complicated stuff:
+
+Quotes
+------
+We've implemented a single regex that captures the quote with the text inside it, 
+according to the specs.
+
+  VALID_ASCII_CHARS = [ !#-\[\]-~]
+  VALID_STRING_CHARS = "\\\\"|"\\\""|"\\t"|"\\n"|{VALID_ASCII_CHARS}
+
+VALID_ASCII_CHARS are: ASCII chars 32 - 126, except \ and ". Additionally,
+'\\', '\n', '\t' and '\"' are valid.
+
+So, finally, this is the regex for quotes:
+
+QUOTED_STRING = [\"]({VALID_STRING_CHARS})*[\"]
 
 
+Integer literal
+---------------
 
-Regular Expressions
+  DIGIT = [0-9]
+  INTEGER_LITERAL = [0]|[1-9]({DIGIT})*
+
+A number can't have trailing zeros, so it is either 'zero' or it starts with a
+different digit and then has any combination of trailing digits. 
 
 
+Identifier
+----------
+Starts with a lower-case letter, then any combination of alpha-numeric characters.
 
+  LOWER_LETTER = [a-z]
+  UPPER_LETTER = [A-Z]
+  LETTER = {LOWER_LETTER}|{UPPER_LETTER}|[_]
+  ALPHA_NUMERIC = {DIGIT}|{LETTER}
+  IDENTIFIER = {LOWER_LETTER}({ALPHA_NUMERIC})*
+
+Class identifier
+----------------
+  CLASS_IDENTIFIER = {UPPER_LETTER}({ALPHA_NUMERIC})*
