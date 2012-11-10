@@ -35,7 +35,7 @@ WHITESPACE = [ \t\f\r\n]
 
 /* 
    Valid string chars are: ASCII chars 32 - 126, except \ and ". 
-   Additionally, \\, \n, \t and \" are valid.
+   Additionally, '\\', '\n', '\t' and '\"' are valid.
 */
 VALID_ASCII_CHARS = [ !#-\[\]-~]
 VALID_STRING_CHARS = "\\\\"|"\\\""|"\\t"|"\\n"|{VALID_ASCII_CHARS}
@@ -65,6 +65,11 @@ VALID_STRING_CHARS = "\\\\"|"\\\""|"\\t"|"\\n"|{VALID_ASCII_CHARS}
 <YYINITIAL> ";" { return new Token(sym.SEMI, yyline); }
 <YYINITIAL> "." { return new Token(sym.DOT, yyline); }
 <YYINITIAL> "," { return new Token(sym.COMMA, yyline); }
+/* Quotes: starts and ends with a ", other valid chars in the middle. */
+<YYINITIAL> [\"]({VALID_STRING_CHARS})*[\"] {
+  return new Token(sym.QUOTE, yyline, yytext());
+}
+
 
 /* Keywords */
 <YYINITIAL> "class" { return new Token(sym.CLASS, yyline); }
@@ -111,9 +116,7 @@ VALID_STRING_CHARS = "\\\\"|"\\\""|"\\t"|"\\n"|{VALID_ASCII_CHARS}
 
 
 /* Stuff that have text in them */
-<YYINITIAL> (({DIGIT})+)({LETTER})+ {
-  throw new LexicalError("A number follower by a letter is illegal", yyline, yytext());
-}
+
 <YYINITIAL> {NUMBER_LITERAL} {
   if (Math.abs(Long.parseLong(yytext())) >= (long)(Math.pow(2, 31))) {
     throw new LexicalError("Integer out of bounds", yyline, yytext());
@@ -122,17 +125,17 @@ VALID_STRING_CHARS = "\\\\"|"\\\""|"\\t"|"\\n"|{VALID_ASCII_CHARS}
   }
 }
 
+/* Explicitly disallow illegal identifiers. */
+<YYINITIAL> (({DIGIT})+)({LETTER})+ {
+  throw new LexicalError("A number follower by a letter is illegal", yyline, yytext());
+}
+
 /* Class identifiers start with an uppercase letter,
    regular identifiers start with a lowercase letter. */ 
 <YYINITIAL> {UPPER_LETTER}({ALPHA_NUMERIC})* {
   return new Token(sym.CLASS_ID, yyline, yytext());
 }
 <YYINITIAL> {LOWER_LETTER}({ALPHA_NUMERIC})* { return new Token(sym.ID, yyline, yytext()); }
-
-/* Quotes: starts and ends with a ", other valid chars in the middle. */
-<YYINITIAL> [\"]({VALID_STRING_CHARS})*[\"] {
-  return new Token(sym.QUOTE, yyline, yytext());
-}
 
 /* Any other character must be an error. */
 <YYINITIAL> . { throw new LexicalError("illegal character", yyline, yytext()); }
