@@ -1,0 +1,3 @@
+a = "";   // Fine
+b = ";"   // Also fine (lexically)
+c = "hey hey hey This string never ends!...

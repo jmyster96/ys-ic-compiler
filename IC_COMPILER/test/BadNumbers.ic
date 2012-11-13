@@ -1,0 +1,6 @@
+a = 5; // should be ok
+b = 0; // should be fine
+b = 05; // should not be ok
+
+c = 00; // extra: we decided that this shouldn't be ok as well
+        // (the specification was ambiguous on this one). 
