@@ -75,22 +75,26 @@ Integer literal
 ---------------
 
   DIGIT = [0-9]
-  INTEGER_LITERAL = [0]|[1-9]({DIGIT})*
+  INTEGER_LITERAL = [0]+|[1-9]({DIGIT})*
+  ILLEGAL_INTEGER_LITERAL = [0]+[1-9]({DIGIT})*
 
-A number can't have trailing zeros, so it is either 'zero' or it starts with a
-different digit and then has any combination of trailing digits. 
+To enforce the lexical rule that non-zero integers can't have leading zeros, we
+have handled this case explicitly.
+A legal integer literal is either a series of zeros (e.g. '0', '0000') or a number
+that starts with another digit.
+An illegal integer is one that has a leading zero, and then a non-zero digit. Illegal
+integers are handled explicitly and encountering them raises a LexicalError.
 
 
-Identifier
-----------
-Starts with a lower-case letter, then any combination of alpha-numeric characters.
+Identifier / Class identifier
+-----------------------------
+An identifier starts with a lower-case letter, and followed by any combination of
+alpha-numeric characters.
+A Class identifier starts with an upper-case letter.
 
   LOWER_LETTER = [a-z]
   UPPER_LETTER = [A-Z]
   LETTER = {LOWER_LETTER}|{UPPER_LETTER}|[_]
   ALPHA_NUMERIC = {DIGIT}|{LETTER}
   IDENTIFIER = {LOWER_LETTER}({ALPHA_NUMERIC})*
-
-Class identifier
-----------------
   CLASS_IDENTIFIER = {UPPER_LETTER}({ALPHA_NUMERIC})*
