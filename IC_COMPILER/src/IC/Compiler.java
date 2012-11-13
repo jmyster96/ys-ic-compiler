@@ -14,6 +14,9 @@ public class Compiler {
 		try {
 			Reader txtFile = new FileReader(args[0]);
 			Lexer lexer = new Lexer(txtFile);
+			// Read the tokens from the scanner, one by one, and print
+			// each one according to spec (Token.toString() takes care
+			// of that).
 			do {
 				tkn = lexer.next_token();
 				System.out.println(tkn.toString());

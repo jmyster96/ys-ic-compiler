@@ -1,4 +1,0 @@
-class Hi {
-  a5 = 5;  // should be ok
-  b = 5b;  // should not be ok. :(
-}

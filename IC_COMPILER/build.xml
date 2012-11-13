@@ -72,6 +72,7 @@
     <java classname="JFlex.Main">
        <arg value="${src}/IC/Parser/IC.lex"/>
     </java>
+    <echo message="Generating Lexer.java from IC.lex..."/>
     <replace file="${src}/IC/Parser/Lexer.java" value='@SuppressWarnings(value={"all"}) class Lexer'>
 	 <replacetoken>class Lexer</replacetoken>
     </replace>		

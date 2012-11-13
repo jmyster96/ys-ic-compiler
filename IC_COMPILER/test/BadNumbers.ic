@@ -1,6 +1,8 @@
 a = 5; // should be ok
 b = 0; // should be fine
+b4 = 500; // should be fine
+b = 511;
+d = 7123848;
+c = 00; // should be ok as well
 b = 05; // should not be ok
 
-c = 00; // extra: we decided that this shouldn't be ok as well
-        // (the specification was ambiguous on this one). 

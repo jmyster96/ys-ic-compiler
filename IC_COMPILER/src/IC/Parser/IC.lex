@@ -33,8 +33,8 @@ ALPHA_NUMERIC = {DIGIT}|{LETTER}
 WHITESPACE = [ \t\f\r\n]
 
 /* Macros: 'complicated' regexs */
-INTEGER_LITERAL = [0]|[1-9]({DIGIT})*
-ILLEGAL_IDENTIFIER = (({DIGIT})+)({LETTER})+
+INTEGER_LITERAL = [0]+|[1-9]({DIGIT})*
+ILLEGAL_INTEGER_LITERAL = [0]+[1-9]({DIGIT})*
 CLASS_IDENTIFIER = {UPPER_LETTER}({ALPHA_NUMERIC})*
 IDENTIFIER = {LOWER_LETTER}({ALPHA_NUMERIC})*
 
@@ -132,9 +132,9 @@ QUOTED_STRING = [\"]({VALID_STRING_CHARS})*[\"]
   }
 }
 
-/* Explicitly disallow illegal identifiers. */
-<YYINITIAL> {ILLEGAL_IDENTIFIER} {
-  throw new LexicalError("A number follower by a letter is illegal", yyline, yytext());
+<YYINITIAL> {ILLEGAL_INTEGER_LITERAL} {
+  throw new LexicalError("Non-zero integer can't have leading zeros", yyline, yytext());
+
 }
 
 /* Class identifiers start with an uppercase letter,
