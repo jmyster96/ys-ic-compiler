@@ -1,3 +1,33 @@
 package IC.Parser;
 
 import IC.AST.*;
+
+////////////////////////////////////////////
+// Symbol list (terminals and non-terminals)
+
+nonterminal Program Program;
+
+terminal CLASS;
+terminal CLASS_ID;
+terminal LCBR;
+terminal STATIC;
+terminal VOID;
+terminal ID;
+terminal LP;
+terminal STRING;
+terminal RP;
+terminal SEMI;
+terminal INT;
+terminal BOOLEAN;
+terminal COMMA;
+terminal LB;
+terminal RB;
+terminal RCBR;
+
+//////////////
+// The grammar
+
+Class ::= CLASS CLASS_ID LCBR 
+
+Literal ::= INTEGER | NULL;
+
