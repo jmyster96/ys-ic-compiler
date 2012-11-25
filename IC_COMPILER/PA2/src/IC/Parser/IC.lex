@@ -125,16 +125,11 @@ QUOTED_STRING = [\"]({VALID_STRING_CHARS})*[\"]
 }
 
 <YYINITIAL> {INTEGER_LITERAL} {
-  if (Math.abs(Long.parseLong(yytext())) >= (long)(Math.pow(2, 31))) {
-    throw new LexicalError("Integer out of bounds", yyline, yytext());
-  } else {
-    return new Token(sym.INTEGER, yyline, new Integer(yytext()));
-  }
+  return new Token(sym.INTEGER, yyline, yytext());
 }
 
 <YYINITIAL> {ILLEGAL_INTEGER_LITERAL} {
   throw new LexicalError("Non-zero integer can't have leading zeros", yyline, yytext());
-
 }
 
 /* Class identifiers start with an uppercase letter,
