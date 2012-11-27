@@ -5,12 +5,19 @@ import java.lang.Math;
 
 %%
 
+%cup
 %class Lexer
 %public
 %function next_token
 %type Token
 %line
 %scanerror LexicalError
+
+%{
+  public int getLineNumber() {
+    return yyline + 1;
+  }
+%}
 
 %state LINE_COMMENT
 %state BLOCK_COMMENT

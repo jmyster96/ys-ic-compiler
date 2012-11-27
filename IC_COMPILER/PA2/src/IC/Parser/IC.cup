@@ -1,14 +1,71 @@
 package IC.Parser;
 
+import java_cup.runtime.*;
 import IC.AST.*;
+
+parser code  {:
+       /** Causes the parser to print every token it reads.
+        * This is useful for debugging.
+	*/
+        public boolean printTokens;
+        private Lexer lexer;
+       
+        public Parser(Lexer lexer) {
+       	      super(lexer);
+	      this.lexer = lexer;
+        }
+			
+	public int getLine() {
+	       return lexer.getLineNumber();
+	}
+			       
+	public void syntax_error(Symbol s) {
+	       Token tok = (Token) s;
+	       System.out.println("Line " + tok.getLine() + ": Syntax error; unexpected " + tok);
+	}
+:}
+
+// This is just for debugging
+scan with {:
+     Token t = lexer.next_token();
+     if (printTokens)
+     	System.out.println(t.getLine() + ":" + t);
+     return t; 
+:};
 
 ////////////////////////////////////////////
 // Symbol list (terminals and non-terminals)
 
-nonterminal Program Program;
+// Punctuation marks
+terminal LP, RP, LB, RB, LCBR, RCBR, SEMI, DOT, COMMA;
+// Keywords
+terminal CLASS, EXTENDS, STATIC, VOID, INT, BOOLEAN, STRING, RETURN, IF, ELSE, WHILE, BREAK, CONTINUE, THIS, NEW, LENGTH, TRUE, FALSE, NULL;
 
-terminal         ASSIGN;
-terminal Integer INTEGER;
+// Stuff that have text in them
+terminal ID, CLASS_ID, INTEGER, QUOTE;
+
+// Assignment operator
+terminal ASSIGN;
+
+// Boolean operators
+terminal EQUAL, NEQUAL, LT, GT, LTE, GTE;
+
+// Binary operators
+terminal PLUS, MINUS, MULTIPLY, DIVIDE, MOD;
+
+// Unary operators
+terminal LNEG;
+
+// Conditional operators
+terminal LAND, LOR;
+
+non terminal Program program;
+non terminal ICClass class;
+non terminal class_list;
+non terminal fields_or_methods, field_or_method, field, method;
+non terminal var_decl, type;
+non terminal method_params;
+non terminal statement_block, statement_list, statement;
 
 //////////////////////////
 // Precedence declarations
@@ -16,4 +73,26 @@ terminal Integer INTEGER;
 //////////////
 // The grammar
 
-Literal ::= INTEGER | NULL;
+program ::= class_list:cl;
+
+class_list ::= class:c | class:c class_list:cl;
+
+class ::= CLASS CLASS_ID LCBR fields_or_methods RCBR;
+
+fields_or_methods ::= field_or_method | field_or_method fields_or_methods;
+
+field_or_method ::= field | method;
+
+field ::= var_decl SEMI;
+
+var_decl ::= type ID | type LB RB ID;
+
+type ::= INT;
+
+method ::= var_decl LP method_params RP statement_block;
+
+method_params ::= var_decl | var_decl COMMA method_params;
+
+statement_block ::= LCBR statement_list RCBR;
+
+statement_list ::= statement | statement statement_list;
