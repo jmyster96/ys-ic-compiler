@@ -76,14 +76,17 @@ non terminal Method method;
 non terminal Type type;
 non terminal List<Formal> formals;
 non terminal Formal formal;
-non terminal statement_list;
+non terminal List<Statement> statement_list;
 non terminal Statement statement;
 non terminal List<String> id_list;
-non terminal expression;
-non terminal location;
+non terminal Expression expression;
+non terminal Location location;
 non terminal binop, unop;
 non terminal literal;
-non terminal call, static_call, virtual_call, arg_list;
+non terminal Call call;
+non terminal StaticCall static_call;
+non terminal VirtualCall virtual_call;
+non terminal arg_list;
 
 //////////////////////////
 // Precedence declarations
@@ -183,13 +186,37 @@ id_list ::= ID:id {:
 	      RESULT = ids;
 	    :};
 
-method ::= type ID LP formals RP LCBR statement_list RCBR
-       | VOID ID LP formals RP LCBR statement_list RCBR
-       | STATIC type ID LP formals RP LCBR statement_list RCBR
-       | STATIC VOID ID LP formals RP LCBR statement_list RCBR;
+method ::= type:t ID:name LP formals:f RP LCBR statement_list:s RCBR {:
+         RESULT = new VirtualMethod(t, name, f, s);
+       :} |
+       VOID:t ID:name LP formals:f RP LCBR statement_list:s RCBR {:
+         Type voidType = new PrimitiveType(tleft, DataTypes.VOID);
+         RESULT = new VirtualMethod(voidType, name, f, s);
+       :} |
+       STATIC type:t ID:name LP formals:f RP LCBR statement_list:s RCBR {:
+         RESULT = new StaticMethod(t, name, f, s);
+       :} |
+       STATIC VOID:t ID:name LP formals:f RP LCBR statement_list:s RCBR {:
+         Type voidType = new PrimitiveType(tleft, DataTypes.VOID);
+         RESULT = new StaticMethod(voidType, name, f, s);
+       :};
 
-formals ::= | formal | formals COMMA formal;
-formal ::= type ID;
+formals ::= {:
+     	  RESULT = new ArrayList<Formal>();
+	:} |
+	formal:formal {:
+	  List<Formal> formals = new ArrayList<Formal>();
+	  formals.add(formal);
+	  RESULT = formals;
+	:} |
+	formals:formals COMMA formal:formal {:
+	  formals.add(formal);
+	  RESULT = formals;
+	:};
+
+formal ::= type:type ID:id {:
+         RESULT = new Formal(type, id);
+       :};
 
 type ::= INT:t {:
        	 RESULT = new PrimitiveType(tleft, DataTypes.INT);
@@ -208,11 +235,20 @@ type ::= INT:t {:
          RESULT = t;
        :};
 
-statement_list ::=
-	       | statement statement_list;
+statement_list ::= {:
+	         RESULT = new ArrayList<Statement>();
+	       :} |
+	       statement:statement statement_list:statement_list {:
+	         statement_list.add(statement);
+		 RESULT = statement_list;
+	       :};
 
-statement ::= location ASSIGN expression SEMI
-	  | call SEMI
+statement ::= location:variable ASSIGN expression:expression SEMI {:
+	    RESULT = new Assignment(variable, expression);
+	  :} |
+	  call:call SEMI {:
+	    RESULT = new CallStatement(call);
+	  :}
 	  | RETURN SEMI
 	  | RETURN expression SEMI
 	  | IF LP expression RP statement
