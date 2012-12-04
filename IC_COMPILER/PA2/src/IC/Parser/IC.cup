@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java_cup.runtime.*;
 
 import IC.DataTypes;
+import IC.LiteralTypes;
 import IC.AST.*;
 
 
@@ -82,7 +83,7 @@ non terminal List<String> id_list;
 non terminal Expression expression;
 non terminal Location location;
 non terminal binop, unop;
-non terminal literal;
+non terminal Literal literal;
 non terminal Call call;
 non terminal StaticCall static_call;
 non terminal VirtualCall virtual_call;
@@ -304,4 +305,8 @@ binop ::= PLUS | MINUS | MULTIPLY | DIVIDE | MOD | LAND | LOR
 
 unop ::= MINUS %prec UMINUS | LNEG;
 
-literal ::= INTEGER | QUOTE | TRUE | FALSE | NULL;
+literal ::= INTEGER:i {:RESULT = Literal(ileft, LiteralTypes.INTEGER, i); :} |
+			QUOTE:q {:RESULT = Literal(qleft, LiteralTypes.STRING,q); :} |
+			TRUE:t {:RESULT = Literal(tleft, LiteralTypes.BOOLEAN,t); :} | 
+			FALSE:f {:RESULT = Literal(fleft, LiteralTypes.BOOLEAN, f); :} | 
+			NULL:v {:RESULT = Literal(vleft,line, LiteralTypes.VOID); :} ;
