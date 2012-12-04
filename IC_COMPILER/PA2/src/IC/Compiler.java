@@ -28,7 +28,7 @@ public class Compiler {
 	    
 	    // Pretty-print the program to System.out
 	    PrettyPrinter printer = new PrettyPrinter(args[0]);
-	    printer.visit(root);
+	    System.out.println(printer.visit(root));
 	    
 	    // Read the tokens from the scanner, one by one, and print
 	    // each one according to spec (Token.toString() takes care

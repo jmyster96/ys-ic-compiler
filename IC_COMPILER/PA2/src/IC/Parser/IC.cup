@@ -5,8 +5,10 @@ import java.util.ArrayList;
 
 import java_cup.runtime.*;
 
+import IC.BinaryOps;
 import IC.DataTypes;
 import IC.LiteralTypes;
+import IC.UnaryOps;
 import IC.AST.*;
 
 
@@ -49,8 +51,8 @@ terminal LP, RP, LB, RB, LCBR, RCBR, SEMI, DOT, COMMA;
 terminal CLASS, EXTENDS, STATIC, VOID, INT, BOOLEAN, STRING, RETURN, IF, ELSE, WHILE, BREAK, CONTINUE, THIS, NEW, LENGTH, TRUE, FALSE, NULL;
 
 // Stuff that have text in them
-terminal String ID, CLASS_ID, QUOTE;
-terminal Integer INTEGER;
+// Decision: Conversion to Integer will be done NOT here.
+terminal String ID, CLASS_ID, INTEGER, QUOTE;
 
 // Assignment operator
 terminal ASSIGN;
@@ -81,13 +83,15 @@ non terminal List<Statement> statement_list;
 non terminal Statement statement;
 non terminal List<String> id_list;
 non terminal Expression expression;
+non terminal BinaryOp binary_operation;
 non terminal Location location;
-non terminal binop, unop;
+non terminal BinaryOps math_binop, logical_binop;
+non terminal UnaryOps math_unop, logical_unop;
 non terminal Literal literal;
 non terminal Call call;
 non terminal StaticCall static_call;
 non terminal VirtualCall virtual_call;
-non terminal arg_list;
+non terminal List<Expression> arg_list;
 
 //////////////////////////
 // Precedence declarations
@@ -152,6 +156,7 @@ fields_or_methods ::=
 		    for (ASTNode item : items) {
   		      list.add(item);
 		    }
+		    RESULT = list;
 		  :};
 
 field_or_method ::=
@@ -177,7 +182,6 @@ field ::= type:t id_list:names SEMI {:
 	  :};
 
 id_list ::= ID:id {:
-	      System.out.println(id);
 	      List<String> ids = new ArrayList<String>();
 	      ids.add(id);
 	      RESULT = ids;
@@ -284,29 +288,74 @@ statement ::= location:variable ASSIGN expression:expression SEMI {:
 expression ::= location:location {: RESULT = location; :}
 	   | call:call {: RESULT = call; :}
 	   | THIS:t {: RESULT = new This(tleft); :}
-	   | NEW CLASS_ID LP RP
-	   | NEW type LB expression RB
-	   | expression DOT LENGTH
-	   | expression binop expression
-	   | unop expression
-	   | literal
-	   | LP expression RP;
+	   | NEW:n CLASS_ID:name LP RP {: RESULT = new NewClass(nleft, name); :}
+	   | NEW type:type LB expression:size RB {:
+	       RESULT = new NewArray(type, size);
+	     :}
+	   | expression:array DOT LENGTH {: RESULT = new Length(array); :}
+	   | binary_operation:binaryop {: RESULT = binaryop; :}
+	   | math_unop:operator expression:operand {: RESULT = new MathUnaryOp(operator, operand); :}
+	   | logical_unop:operator expression:operand {: RESULT = new LogicalUnaryOp(operator, operand); :}
+	   | literal:literal {: RESULT = literal; :}
+	   | LP expression:expression RP {: RESULT = new ExpressionBlock(expression); :};
 
-call ::= static_call | virtual_call;
-static_call ::= CLASS_ID DOT ID LP arg_list RP;
-virtual_call ::= ID LP arg_list RP
-	     | expression DOT ID LP arg_list RP;
-arg_list ::= | expression | expression COMMA arg_list;
+binary_operation ::=
+		   expression:operand1 math_binop:operator expression:operand2 {:
+	     	     RESULT = new MathBinaryOp(operand1, operator, operand2);
+                   :}
+		 | expression:operand1 logical_binop:operator expression:operand2 {:
+	     	     RESULT = new LogicalBinaryOp(operand1, operator, operand2);
+		   :};
 
-location ::= ID | expression DOT ID | expression LB expression RB;
+call ::= static_call:call {: RESULT = call; :}
+     | virtual_call:call {: RESULT = call; :};
 
-binop ::= PLUS | MINUS | MULTIPLY | DIVIDE | MOD | LAND | LOR
-      | LT | LTE | GT | GTE | EQUAL | NEQUAL;
+static_call ::= CLASS_ID:className DOT ID:name LP arg_list:arguments RP {:
+  	          RESULT = new StaticCall(classNameleft, className, name, arguments);
+		:};
 
-unop ::= MINUS %prec UMINUS | LNEG;
+virtual_call ::= ID:name LP arg_list:arguments RP {:
+   	           RESULT = new VirtualCall(nameleft, name, arguments);
+		 :}
+	       | expression:location DOT ID:name LP arg_list:arguments RP {:
+  	           RESULT = new VirtualCall(locationleft, location, name, arguments);
+		 :};
 
-literal ::= INTEGER:i {:RESULT = Literal(ileft, LiteralTypes.INTEGER, i); :} |
-			QUOTE:q {:RESULT = Literal(qleft, LiteralTypes.STRING,q); :} |
-			TRUE:t {:RESULT = Literal(tleft, LiteralTypes.BOOLEAN,t); :} | 
-			FALSE:f {:RESULT = Literal(fleft, LiteralTypes.BOOLEAN, f); :} | 
-			NULL:v {:RESULT = Literal(vleft,line, LiteralTypes.VOID); :} ;
+arg_list ::= {: RESULT = new ArrayList<Expression>(); :}
+	 | expression:arg {:
+	     List<Expression> arg_list = new ArrayList<Expression>();
+	     arg_list.add(arg);
+	     RESULT = arg_list;
+	   :}
+	 | expression:arg COMMA arg_list:arg_list {:
+	     arg_list.add(arg);
+	     RESULT = arg_list;
+	   :};
+
+location ::= ID:name {: RESULT = new VariableLocation(nameleft, name); :}
+	 | expression:location DOT ID:name {: RESULT = new VariableLocation(nameleft, location, name); :}
+	 | expression:array LB expression:index RB {: RESULT = new ArrayLocation(array, index); :};
+
+math_binop ::= PLUS {: RESULT = BinaryOps.PLUS; :}
+	   | MINUS {: RESULT = BinaryOps.MINUS; :}
+	   | MULTIPLY {: RESULT = BinaryOps.MULTIPLY; :}
+	   | DIVIDE {: RESULT = BinaryOps.DIVIDE; :}
+	   | MOD {: RESULT = BinaryOps.MOD; :}
+	   | LT {: RESULT = BinaryOps.LT; :}
+	   | LTE {: RESULT = BinaryOps.LTE; :}
+	   | GT {: RESULT = BinaryOps.GT; :}
+	   | GTE {: RESULT = BinaryOps.GTE; :}
+	   | EQUAL {: RESULT = BinaryOps.EQUAL; :}
+	   | NEQUAL {: RESULT = BinaryOps.NEQUAL; :};
+
+logical_binop ::= LAND {: RESULT = BinaryOps.LAND; :}
+	      | LOR  {: RESULT = BinaryOps.LOR; :};
+
+math_unop ::= MINUS {: RESULT = UnaryOps.UMINUS; :} %prec UMINUS;
+logical_unop ::= LNEG {: RESULT = UnaryOps.LNEG; :};
+
+literal ::= INTEGER:i {: RESULT = new Literal(ileft, LiteralTypes.INTEGER, i); :}
+	| QUOTE:q {: RESULT = new Literal(qleft, LiteralTypes.STRING, q); :}
+	| TRUE:t {: RESULT = new Literal(tleft, LiteralTypes.TRUE, t); :}
+	| FALSE:f {: RESULT = new Literal(fleft, LiteralTypes.FALSE, f); :}
+	| NULL:v {: RESULT = new Literal(vleft, LiteralTypes.NULL); :};
