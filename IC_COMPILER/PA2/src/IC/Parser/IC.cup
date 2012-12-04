@@ -1,7 +1,13 @@
 package IC.Parser;
 
+import java.util.List;
+import java.util.ArrayList;
+
 import java_cup.runtime.*;
+
+import IC.DataTypes;
 import IC.AST.*;
+
 
 parser code  {:
        /** Causes the parser to print every token it reads.
@@ -42,7 +48,8 @@ terminal LP, RP, LB, RB, LCBR, RCBR, SEMI, DOT, COMMA;
 terminal CLASS, EXTENDS, STATIC, VOID, INT, BOOLEAN, STRING, RETURN, IF, ELSE, WHILE, BREAK, CONTINUE, THIS, NEW, LENGTH, TRUE, FALSE, NULL;
 
 // Stuff that have text in them
-terminal ID, CLASS_ID, INTEGER, QUOTE;
+terminal String ID, CLASS_ID, QUOTE;
+terminal Integer INTEGER;
 
 // Assignment operator
 terminal ASSIGN;
@@ -54,45 +61,191 @@ terminal EQUAL, NEQUAL, LT, GT, LTE, GTE;
 terminal PLUS, MINUS, MULTIPLY, DIVIDE, MOD;
 
 // Unary operators
-terminal LNEG;
+terminal UMINUS, LNEG;
 
 // Conditional operators
 terminal LAND, LOR;
 
 non terminal Program program;
 non terminal ICClass class;
-non terminal class_list;
-non terminal fields_or_methods, field_or_method, field, method;
-non terminal var_decl, type;
-non terminal method_params;
-non terminal statement_block, statement_list, statement;
+non terminal List<ICClass> class_list;
+non terminal List<ASTNode> fields_or_methods;
+non terminal List<ASTNode> field_or_method;
+non terminal List<Field> field;
+non terminal Method method;
+non terminal Type type;
+non terminal List<Formal> formals;
+non terminal Formal formal;
+non terminal statement_list;
+non terminal Statement statement;
+non terminal List<String> id_list;
+non terminal expression;
+non terminal location;
+non terminal binop, unop;
+non terminal literal;
+non terminal call, static_call, virtual_call, arg_list;
 
 //////////////////////////
 // Precedence declarations
 
+precedence left LOR;
+precedence left LAND;
+precedence left EQUAL, NEQUAL;
+precedence left LT, LTE, GT, GTE;
+precedence left PLUS, MINUS;
+precedence left MULTIPLY, DIVIDE, MOD;
+precedence left LB;
+precedence left ELSE;
+precedence left DOT;
+
 //////////////
 // The grammar
 
-program ::= class_list:cl;
+program ::= class_list:cl
+	{: System.out.println("Producing Program");
+	   RESULT = new Program(cl); :};
 
-class_list ::= class:c | class:c class_list:cl;
+// TODO: consider reversing
+class_list ::=
+	   {:
+	     RESULT = new ArrayList<ICClass>();
+	   :} |
+	   class:c class_list:cl {:
+   	     cl.add(c);
+	     RESULT = cl;
+           :};
 
-class ::= CLASS CLASS_ID LCBR fields_or_methods RCBR;
+class ::=
+      CLASS CLASS_ID:cid LCBR fields_or_methods:fom RCBR {:
+         List<Field> fields = new ArrayList<Field>();
+         List<Method> methods = new ArrayList<Method>();
+	 for (ASTNode fieldOrMethod : fom) {
+	   if (fieldOrMethod instanceof Field) {
+	     fields.add((Field)fieldOrMethod);
+	   } else {
+	     methods.add((Method)fieldOrMethod);
+	   }
+	 }
+         RESULT = new ICClass(cidleft, cid, fields, methods);
+      :} |
+      CLASS CLASS_ID:cid EXTENDS CLASS_ID:superid LCBR fields_or_methods:fom RCBR {:
+         List<Field> fields = new ArrayList<Field>();
+         List<Method> methods = new ArrayList<Method>();
+	 for (ASTNode fieldOrMethod : fom) {
+	   if (fieldOrMethod instanceof Field) {
+	     fields.add((Field)fieldOrMethod);
+	   } else {
+	     methods.add((Method)fieldOrMethod);
+	   }
+	 }
+         RESULT = new ICClass(cidleft, cid, superid, fields, methods);
+      :};
 
-fields_or_methods ::= field_or_method | field_or_method fields_or_methods;
+// TODO: consider reversing
+fields_or_methods ::=
+		  {: RESULT = new ArrayList<ASTNode>(); :} |
+		  field_or_method:items fields_or_methods:list {:
+		    for (ASTNode item : items) {
+  		      list.add(item);
+		    }
+		  :};
 
-field_or_method ::= field | method;
+field_or_method ::=
+		field:flist {:
+		  List<ASTNode> items = new ArrayList<ASTNode>();
+		  for (Field f : flist) {
+  		    items.add(f);
+		  }
+		  RESULT = items;
+		:} |
+		method:m {:
+		  List<ASTNode> items = new ArrayList<ASTNode>();
+		  items.add(m);
+		  RESULT = items;
+		  :};
 
-field ::= var_decl SEMI;
+field ::= type:t id_list:names SEMI {:
+            List<Field> list = new ArrayList<Field>();
+            for (String name : names) {
+              list.add(new Field(t, name));
+	    }
+	    RESULT = list;
+	  :};
 
-var_decl ::= type ID | type LB RB ID;
+id_list ::= ID:id {:
+	      System.out.println(id);
+	      List<String> ids = new ArrayList<String>();
+	      ids.add(id);
+	      RESULT = ids;
+	    :} |
+	    id_list:ids COMMA ID:id {:
+	      ids.add(id);
+	      RESULT = ids;
+	    :};
 
-type ::= INT;
+method ::= type ID LP formals RP LCBR statement_list RCBR
+       | VOID ID LP formals RP LCBR statement_list RCBR
+       | STATIC type ID LP formals RP LCBR statement_list RCBR
+       | STATIC VOID ID LP formals RP LCBR statement_list RCBR;
 
-method ::= var_decl LP method_params RP statement_block;
+formals ::= | formal | formals COMMA formal;
+formal ::= type ID;
 
-method_params ::= var_decl | var_decl COMMA method_params;
+type ::= INT:t {:
+       	 RESULT = new PrimitiveType(tleft, DataTypes.INT);
+       :} |
+       BOOLEAN:t {:
+         RESULT = new PrimitiveType(tleft, DataTypes.BOOLEAN);
+       :} |
+       STRING:t {:
+         RESULT = new PrimitiveType(tleft, DataTypes.STRING);
+       :} |
+       CLASS_ID:name {:
+         RESULT = new UserType(nameleft, name);
+       :} |
+       type:t LB RB {:
+         t.incrementDimension();
+         RESULT = t;
+       :};
 
-statement_block ::= LCBR statement_list RCBR;
+statement_list ::=
+	       | statement statement_list;
 
-statement_list ::= statement | statement statement_list;
+statement ::= location ASSIGN expression SEMI
+	  | call SEMI
+	  | RETURN SEMI
+	  | RETURN expression SEMI
+	  | IF LP expression RP statement
+	  | IF LP expression RP statement ELSE statement
+	  | WHILE LP expression RP statement
+	  | BREAK SEMI
+	  | CONTINUE SEMI
+	  | LCBR statement_list RCBR
+	  | type ID SEMI
+	  | type ID ASSIGN expression SEMI;
+
+expression ::= location
+	   | call
+	   | THIS
+	   | NEW CLASS_ID LP RP
+	   | NEW type LB expression RB
+	   | expression DOT LENGTH
+	   | expression binop expression
+	   | unop expression
+	   | literal
+	   | LP expression RP;
+
+call ::= static_call | virtual_call;
+static_call ::= CLASS_ID DOT ID LP arg_list RP;
+virtual_call ::= ID LP arg_list RP
+	     | expression DOT ID LP arg_list RP;
+arg_list ::= | expression | expression COMMA arg_list;
+
+location ::= ID | expression DOT ID | expression LB expression RB;
+
+binop ::= PLUS | MINUS | MULTIPLY | DIVIDE | MOD | LAND | LOR
+      | LT | LTE | GT | GTE | EQUAL | NEQUAL;
+
+unop ::= MINUS %prec UMINUS | LNEG;
+
+literal ::= INTEGER | QUOTE | TRUE | FALSE | NULL;

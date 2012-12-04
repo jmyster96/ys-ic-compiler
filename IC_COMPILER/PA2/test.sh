@@ -1,3 +1,3 @@
 (ant parser &&
 ant build &&
-./run_compiler.sh test/Quicksort.ic)
+./run_compiler.sh $1)

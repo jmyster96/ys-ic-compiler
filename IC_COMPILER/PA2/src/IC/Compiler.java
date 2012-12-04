@@ -18,11 +18,13 @@ public class Compiler {
 	    Lexer lexer = new Lexer(txtFile);
 	    Parser parser = new Parser(lexer);
 	    // TODO: Get as command line argument
-	    //	    parser.printTokens = true;
+	    parser.printTokens = true;
 
 	    Symbol parseSymbol = parser.parse();
 	    System.out.println("Parsed " + args[0] + " successfully!");
+
 	    Program root = (Program) parseSymbol.value;
+	    System.out.println("Root is null? " + (root == null));
 	    
 	    // Pretty-print the program to System.out
 	    PrettyPrinter printer = new PrettyPrinter(args[0]);
@@ -46,6 +48,7 @@ public class Compiler {
 	    System.exit(1);
 	} catch (Exception e) {
 	    // Those are supposed to be Parser exceptions.
+	    e.printStackTrace();
 	    System.out.println(e);
 	    System.exit(0);
 	}
