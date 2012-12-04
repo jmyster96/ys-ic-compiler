@@ -248,21 +248,41 @@ statement ::= location:variable ASSIGN expression:expression SEMI {:
 	  :} |
 	  call:call SEMI {:
 	    RESULT = new CallStatement(call);
+	  :} |
+	  RETURN:r SEMI {:
+	    RESULT = new Return(rleft);
 	  :}
-	  | RETURN SEMI
-	  | RETURN expression SEMI
-	  | IF LP expression RP statement
-	  | IF LP expression RP statement ELSE statement
-	  | WHILE LP expression RP statement
-	  | BREAK SEMI
-	  | CONTINUE SEMI
-	  | LCBR statement_list RCBR
-	  | type ID SEMI
-	  | type ID ASSIGN expression SEMI;
+	  | RETURN:r expression:expression SEMI {:
+	    RESULT = new Return(rleft, expression);
+	  :}
+	  | IF LP expression:condition RP statement:operation {:
+	    RESULT = new If(condition, operation);
+	  :}
+	  | IF LP expression:condition RP statement:operation ELSE statement:elseOperation {:
+	    RESULT = new If(condition, operation, elseOperation);
+	  :}
+	  | WHILE LP expression:condition RP statement:operation {:
+	    RESULT = new While(condition, operation);
+	  :}
+	  | BREAK:b SEMI {:
+	    RESULT = new Break(bleft);
+	  :}
+	  | CONTINUE:c SEMI {:
+	    RESULT = new Continue(cleft);
+	  :}
+	  | LCBR:begin statement_list:statements RCBR {:
+	    RESULT = new StatementsBlock(beginleft, statements);
+	  :}
+	  | type:type ID:name SEMI {:
+	    RESULT = new LocalVariable(type, name);
+	  :}
+	  | type:type ID:name ASSIGN expression:initValue SEMI {:
+	    RESULT = new LocalVariable(type, name, initValue);
+	  :};
 
-expression ::= location
-	   | call
-	   | THIS
+expression ::= location:location {: RESULT = location; :}
+	   | call:call {: RESULT = call; :}
+	   | THIS:t {: RESULT = new This(tleft); :}
 	   | NEW CLASS_ID LP RP
 	   | NEW type LB expression RB
 	   | expression DOT LENGTH
