@@ -1,0 +1,32 @@
+class ClassNumberOne {
+  int x1, x2, x3;
+  int returnX1() {
+    return this.x1;
+  }
+  int y1, y2;
+  int returnX2() {
+    // Several statements
+    int z1 = y1;
+    int z2 = y2;
+    return this.x2;
+  }
+  void takeSeveralArgs(string arg1, int arg2, UserType arg3) {
+  }
+  void takeASingleArg(string iAmSingle) {
+  }
+  void letsCheckPrecedences() {
+    // This gets decided by the grammar, no need for precedence
+    int p = !!--g;
+    // This is kind of ambiguous.
+    int g = - 5+3;
+    aAAA = -(5+3);
+    bBBB = -5 + 3;
+    cCCC = 5+3.length;
+    if (!p) {
+      // Do nothing
+    }
+  }
+}
+class ClassNumberTwo {}
+class Class3 {}
+class Class4 {}

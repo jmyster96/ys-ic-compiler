@@ -1,7 +1,8 @@
 package IC.Parser;
 
-import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import java_cup.runtime.*;
 
@@ -13,34 +14,24 @@ import IC.AST.*;
 
 
 parser code {:
-       /** Causes the parser to print every token it reads.
-        * This is useful for debugging.
-        */
-        public boolean printTokens;
-        private Lexer lexer;
-       
-        public Parser(Lexer lexer) {
-              super(lexer);
-          this.lexer = lexer;
-        }
+  private Lexer lexer;
+
+  public Parser(Lexer lexer) {
+    super(lexer);
+    this.lexer = lexer;
+  }
             
-        public int getLine() {
-          return lexer.getLineNumber();
-        }
-                   
-        public void syntax_error(Symbol s) {
-          Token tok = (Token) s;
-          System.out.println("Line " + tok.getLine() + ": Syntax error; unexpected " + tok);
-        }
+  public int getLine() {
+    return lexer.getLineNumber();
+  }
+
+  public void syntax_error(Symbol s) {
+    Token tok = (Token) s;
+    System.out.println("Line " + tok.getLine() + ": Syntax error; unexpected " + tok);
+  }
 :};
 
-// This is just for debugging
-scan with {:
-    Token t = lexer.next_token();
-    if (printTokens)
-      System.out.println(t.getLine() + ":" + t);
-    return t; 
-:};
+scan with {: return lexer.next_token(); :};
 
 ////////////////////////////////////////////
 // Symbol list (terminals and non-terminals)
@@ -73,9 +64,8 @@ terminal LAND, LOR;
 non terminal Program program;
 non terminal ICClass class;
 non terminal List<ICClass> class_list;
-non terminal List<ASTNode> fields_or_methods;
-non terminal List<ASTNode> field_or_method;
-non terminal List<Field> field;
+non terminal ClassMembersHelper fields_or_methods;
+non terminal List<Field> fields;
 non terminal Method method;
 non terminal Type type;
 non terminal List<Formal> formals;
@@ -84,7 +74,6 @@ non terminal List<Statement> statement_list;
 non terminal Statement statement;
 non terminal List<String> id_list;
 non terminal Expression expression;
-non terminal BinaryOp binary_operation;
 non terminal Location location;
 non terminal BinaryOps math_binop, logical_binop;
 non terminal UnaryOps math_unop, logical_unop;
@@ -97,15 +86,19 @@ non terminal List<Expression> arg_list;
 //////////////////////////
 // Precedence declarations
 
+precedence left ELSE;
+precedence left DOT;
+
+precedence left ASSIGN;
 precedence left LOR;
 precedence left LAND;
 precedence left EQUAL, NEQUAL;
 precedence left LT, LTE, GT, GTE;
 precedence left PLUS, MINUS;
 precedence left MULTIPLY, DIVIDE, MOD;
-precedence left LB;
-precedence left ELSE;
-precedence left DOT;
+precedence right UMINUS, LNEG;
+precedence left LB, RB, LP, RP;
+
 
 //////////////
 // The grammar
@@ -114,76 +107,44 @@ program ::= class_list:cl
             {: RESULT = new Program(cl); :}
             ;
 
-// TODO: consider reversing
-class_list ::= {:  RESULT = new ArrayList<ICClass>(); :}
+class_list ::= {: RESULT = new ArrayList<ICClass>(); :}
                |
-               class:c class_list:cl
+               class_list:cl class:c
                {: cl.add(c);
                   RESULT = cl;
                :}
                ;
 
 class ::= CLASS CLASS_ID:cid LCBR fields_or_methods:fom RCBR
-          {: List<Field> fields = new ArrayList<Field>();
-             List<Method> methods = new ArrayList<Method>();
-             for (ASTNode fieldOrMethod : fom) {
-               if (fieldOrMethod instanceof Field) {
-                 fields.add((Field)fieldOrMethod);
-               } else {
-                 methods.add((Method)fieldOrMethod);
-               }
-             }
-             RESULT = new ICClass(cidleft, cid, fields, methods);
-          :}
+          {: RESULT = new ICClass(cidleft, cid, fom.getFields(), fom.getMethods()); :}
           |
           CLASS CLASS_ID:cid EXTENDS CLASS_ID:superid LCBR fields_or_methods:fom RCBR
-          {: List<Field> fields = new ArrayList<Field>();
-             List<Method> methods = new ArrayList<Method>();
-             for (ASTNode fieldOrMethod : fom) {
-               if (fieldOrMethod instanceof Field) {
-                 fields.add((Field)fieldOrMethod);
-               } else {
-                 methods.add((Method)fieldOrMethod);
-               }
-             }
-             RESULT = new ICClass(cidleft, cid, superid, fields, methods);
-          :}
+          {: RESULT = new ICClass(cidleft, cid, superid, fom.getFields(), fom.getMethods()); :}
           ;
 
-// TODO: consider reversing
-fields_or_methods ::= {: RESULT = new ArrayList<ASTNode>(); :}
+fields_or_methods ::= {: RESULT = new ClassMembersHelper(); :}
                       |
-                      field_or_method:items fields_or_methods:list
-                      {: for (ASTNode item : items) {
-                           list.add(item);
+                      fields_or_methods:classmembers fields:fields
+                      {: for (Field field : fields) {
+                           classmembers.add(field);
                          }
-                         RESULT = list;
+                         RESULT = classmembers;
+                      :}
+                      |
+                      fields_or_methods:classmembers method:method
+                      {: classmembers.add(method);
+                         RESULT = classmembers;
                       :}
                       ;
 
-field_or_method ::= field:flist
-                    {: List<ASTNode> items = new ArrayList<ASTNode>();
-                       for (Field f : flist) {
-                         items.add(f);
-                       }
-                       RESULT = items;
-                    :}
-                    |
-                    method:m
-                    {: List<ASTNode> items = new ArrayList<ASTNode>();
-                       items.add(m);
-                       RESULT = items;
-                    :}
-                    ;
-
-field ::= type:t id_list:names SEMI
-          {: List<Field> list = new ArrayList<Field>();
-             for (String name : names) {
-               list.add(new Field(t, name));
-             }
-             RESULT = list;
-          :}
-          ;
+fields ::= type:t id_list:names SEMI
+           {: List<Field> list = new ArrayList<Field>();
+              for (String name : names) {
+                list.add(new Field(t, name));
+              }
+              RESULT = list;
+           :}
+           ;
 
 id_list ::= ID:id 
             {: List<String> ids = new ArrayList<String>();
@@ -251,7 +212,7 @@ type ::= INT:t
 
 statement_list ::= {: RESULT = new ArrayList<Statement>(); :}
                    |
-                   statement:statement statement_list:statement_list
+                   statement_list:statement_list statement:statement
                    {: statement_list.add(statement);
                       RESULT = statement_list;
                    :}
@@ -312,9 +273,13 @@ expression ::= location:location
                expression:array DOT LENGTH
                {: RESULT = new Length(array); :}
                |
-               binary_operation:binaryop
-               {: RESULT = binaryop; :}
-               | math_unop:operator expression:operand
+	       expression:operand1 math_binop:operator expression:operand2
+	       {: RESULT = new MathBinaryOp(operand1, operator, operand2); :}
+               |
+               expression:operand1 logical_binop:operator expression:operand2
+               {: RESULT = new LogicalBinaryOp(operand1, operator, operand2); :}
+               |
+	       math_unop:operator expression:operand
                {: RESULT = new MathUnaryOp(operator, operand); :}
                |
                logical_unop:operator expression:operand
@@ -326,13 +291,6 @@ expression ::= location:location
                LP expression:expression RP
                {: RESULT = new ExpressionBlock(expression); :}
                ;
-
-binary_operation ::= expression:operand1 math_binop:operator expression:operand2
-                     {: RESULT = new MathBinaryOp(operand1, operator, operand2); :}
-                     |
-                     expression:operand1 logical_binop:operator expression:operand2
-                     {: RESULT = new LogicalBinaryOp(operand1, operator, operand2); :}
-                     ;
 
 call ::= static_call:call
          {: RESULT = call; :}
