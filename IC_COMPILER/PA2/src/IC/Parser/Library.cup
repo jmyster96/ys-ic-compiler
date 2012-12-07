@@ -17,21 +17,10 @@ parser code {:
     super(lexer);
     this.lexer = lexer;
   }
-            
-  public int getLine() {
-    return lexer.getLineNumber();
-  }
-
-  public void syntax_error(Symbol s) {
-    Token tok = (Token) s;
-    System.out.println("Line " + tok.getLine() + ": Syntax error; unexpected " + tok);
-  }
 :};
 
 scan with {:
-  Token t = lexer.next_token();
-  System.out.println(t.getLine() + ":" + t);
-  return t;
+  return lexer.next_token();
 :};
 
 ////////////////////////////////////////////
