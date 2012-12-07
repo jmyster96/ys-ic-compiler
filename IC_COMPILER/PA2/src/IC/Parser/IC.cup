@@ -53,10 +53,10 @@ terminal ASSIGN;
 terminal EQUAL, NEQUAL, LT, GT, LTE, GTE;
 
 // Binary operators
-terminal PLUS, MINUS, MULTIPLY, DIVIDE, MOD;
+terminal BinaryOps PLUS, MINUS, MULTIPLY, DIVIDE, MOD;
 
 // Unary operators
-terminal UMINUS, LNEG;
+terminal UnaryOps UMINUS, LNEG;
 
 // Conditional operators
 terminal LAND, LOR;
@@ -75,8 +75,8 @@ non terminal Statement statement;
 non terminal List<String> id_list;
 non terminal Expression expression;
 non terminal Location location;
-non terminal BinaryOps math_binop, logical_binop;
-non terminal UnaryOps math_unop, logical_unop;
+non terminal BinaryOp binop;
+non terminal UnaryOp unop;
 non terminal Literal literal;
 non terminal Call call;
 non terminal StaticCall static_call;
@@ -273,17 +273,11 @@ expression ::= location:location
                expression:array DOT LENGTH
                {: RESULT = new Length(array); :}
                |
-	       expression:operand1 math_binop:operator expression:operand2
-	       {: RESULT = new MathBinaryOp(operand1, operator, operand2); :}
+               binop:binop
+               {: RESULT = binop; :}
                |
-               expression:operand1 logical_binop:operator expression:operand2
-               {: RESULT = new LogicalBinaryOp(operand1, operator, operand2); :}
-               |
-	       math_unop:operator expression:operand
-               {: RESULT = new MathUnaryOp(operator, operand); :}
-               |
-               logical_unop:operator expression:operand
-               {: RESULT = new LogicalUnaryOp(operator, operand); :}
+               unop:unop
+               {: RESULT = unop; :}
                |
                literal:literal
                {: RESULT = literal; :}
@@ -334,55 +328,53 @@ location ::= ID:name
              {: RESULT = new ArrayLocation(array, index); :}
              ;
 
-math_binop ::= PLUS
-               {: RESULT = BinaryOps.PLUS; :}
-               |
-               MINUS
-               {: RESULT = BinaryOps.MINUS; :}
-               |
-               MULTIPLY
-               {: RESULT = BinaryOps.MULTIPLY; :}
-               |
-               DIVIDE
-               {: RESULT = BinaryOps.DIVIDE; :}
-               |
-               MOD
-               {: RESULT = BinaryOps.MOD; :}
-               |
-               LT
-               {: RESULT = BinaryOps.LT; :}
-               |
-               LTE
-               {: RESULT = BinaryOps.LTE; :}
-               |
-               GT
-               {: RESULT = BinaryOps.GT; :}
-               |
-               GTE
-               {: RESULT = BinaryOps.GTE; :}
-               |
-               EQUAL
-               {: RESULT = BinaryOps.EQUAL; :}
-               |
-               NEQUAL
-               {: RESULT = BinaryOps.NEQUAL; :}
-               ;
+binop ::= expression:operand1 PLUS expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.PLUS, operand2); :}
+          |
+          expression:operand1 MINUS expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.MINUS, operand2); :}
+          |
+          expression:operand1 MULTIPLY expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.MULTIPLY, operand2); :}
+          |
+          expression:operand1 DIVIDE expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.DIVIDE, operand2); :}
+          |
+          expression:operand1 MOD expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.MOD, operand2); :}
+          |
+          expression:operand1 LT expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.LT, operand2); :}
+          |
+          expression:operand1 LTE expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.LTE, operand2); :}
+          |
+          expression:operand1 GT expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.GT, operand2); :}
+          |
+          expression:operand1 GTE expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.GTE, operand2); :}
+          |
+          expression:operand1 EQUAL expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.EQUAL, operand2); :}
+          |
+          expression:operand1 NEQUAL expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.NEQUAL, operand2); :}
+          |
+          expression:operand1 LAND expression:operand2
+          {: RESULT = new LogicalBinaryOp(operand1, BinaryOps.LAND, operand2); :}
+          |
+          expression:operand1 LOR expression:operand2
+          {: RESULT = new LogicalBinaryOp(operand1, BinaryOps.LOR, operand2); :}
+          ;
 
-logical_binop ::= LAND
-                  {: RESULT = BinaryOps.LAND; :}
-                  |
-                  LOR
-                  {: RESULT = BinaryOps.LOR; :}
-                  ;
-
-math_unop ::= MINUS
-              {: RESULT = UnaryOps.UMINUS; :}
-              %prec UMINUS
-              ;
-
-logical_unop ::= LNEG
-                 {: RESULT = UnaryOps.LNEG; :}
-                 ;
+unop ::= MINUS expression:operand
+         {: RESULT = new MathUnaryOp(UnaryOps.UMINUS, operand); :}
+         %prec UMINUS
+         |
+         LNEG expression:operand
+         {: RESULT = new LogicalUnaryOp(UnaryOps.LNEG, operand); :}
+         ;
 
 literal ::= INTEGER:i
             {: RESULT = new Literal(ileft, LiteralTypes.INTEGER, i); :}
