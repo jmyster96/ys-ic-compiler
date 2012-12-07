@@ -60,7 +60,7 @@
 	 <replacetoken>class LibraryParser</replacetoken>
     </replace>		
 
-    <move file="LibraryParser.java" todir="${src}/IC/LibraryParser"/>
+    <move file="LibraryParser.java" todir="${src}/IC/Parser"/>
     </target>
 
     <!--

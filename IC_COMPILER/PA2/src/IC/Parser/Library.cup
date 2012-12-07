@@ -1,33 +1,133 @@
 package IC.Parser;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import java_cup.runtime.*;
+
+import IC.DataTypes;
 import IC.AST.*;
+
+
+parser code {:
+  private Lexer lexer;
+
+  public LibraryParser(Lexer lexer) {
+    super(lexer);
+    this.lexer = lexer;
+  }
+            
+  public int getLine() {
+    return lexer.getLineNumber();
+  }
+
+  public void syntax_error(Symbol s) {
+    Token tok = (Token) s;
+    System.out.println("Line " + tok.getLine() + ": Syntax error; unexpected " + tok);
+  }
+:};
+
+scan with {:
+  Token t = lexer.next_token();
+  System.out.println(t.getLine() + ":" + t);
+  return t;
+:};
 
 ////////////////////////////////////////////
 // Symbol list (terminals and non-terminals)
 
-nonterminal Program Program;
+// Punctuation marks
+terminal LP, RP, LB, RB, LCBR, RCBR, SEMI, DOT, COMMA;
+// Keywords
+terminal CLASS, EXTENDS, STATIC, VOID, INT, BOOLEAN, STRING, RETURN;
+terminal IF, ELSE, WHILE, BREAK, CONTINUE, THIS, NEW, LENGTH, TRUE, FALSE, NULL;
 
-terminal CLASS;
-terminal CLASS_ID;
-terminal LCBR;
-terminal STATIC;
-terminal VOID;
-terminal ID;
-terminal LP;
-terminal STRING;
-terminal RP;
-terminal SEMI;
-terminal INT;
-terminal BOOLEAN;
-terminal COMMA;
-terminal LB;
-terminal RB;
-terminal RCBR;
+// Stuff that have text in them
+// Decision: Conversion to Integer will be done NOT here.
+terminal String ID, CLASS_ID, INTEGER, QUOTE;
+
+// Assignment operator
+terminal ASSIGN;
+
+// Boolean operators
+terminal EQUAL, NEQUAL, LT, GT, LTE, GTE;
+
+// Binary operators
+terminal BinaryOps PLUS, MINUS, MULTIPLY, DIVIDE, MOD;
+
+// Unary operators
+terminal UnaryOps UMINUS, LNEG;
+
+// Conditional operators
+terminal LAND, LOR;
+
+non terminal ICClass libic;
+non terminal List<Method> libmethod_list;
+non terminal LibraryMethod libmethod;
+non terminal Type type;
+non terminal List<Formal> formals;
+non terminal Formal formal;
+
 
 //////////////
 // The grammar
 
-Class ::= CLASS CLASS_ID LCBR 
+libic ::= CLASS:c CLASS_ID:name LCBR libmethod_list:libmethods RCBR
+          {: RESULT = new ICClass(cleft, name, new ArrayList<Field>(), libmethods); :}
+          ;
 
-Literal ::= INTEGER | NULL;
+libmethod_list ::= {: RESULT = new ArrayList<Method>(); :}
+                   |
+                   libmethod_list:libmethods libmethod:libmethod
+                   {: libmethods.add(libmethod);
+                      RESULT = libmethods;
+                   :}
+                   ;
+                   
+libmethod ::= STATIC type:type ID:name LP formals:formals RP SEMI
+              {: RESULT = new LibraryMethod(type, name, formals); :}
+              |
+              STATIC VOID:t ID:name LP formals:formals RP SEMI
+              {: Type voidType = new PrimitiveType(tleft, DataTypes.VOID);
+                 RESULT = new LibraryMethod(voidType, name, formals);
+              :}
+              ;
 
+formals ::= {: RESULT = new ArrayList<Formal>(); :}
+            |
+            formal:formal
+            {: List<Formal> formals = new ArrayList<Formal>();
+               formals.add(formal);
+               RESULT = formals;
+            :}
+            |
+            formals:formals COMMA formal:formal
+            {: formals.add(formal);
+               RESULT = formals;
+            :}
+            ;
+
+formal ::= type:type ID:id
+           {: RESULT = new Formal(type, id); :}
+           ;
+
+type ::= INT:t
+         {: RESULT = new PrimitiveType(tleft, DataTypes.INT); :}
+         |
+         BOOLEAN:t
+         {: RESULT = new PrimitiveType(tleft, DataTypes.BOOLEAN); :}
+         |
+         STRING:t
+         {: RESULT = new PrimitiveType(tleft, DataTypes.STRING); :}
+         |
+         CLASS_ID:name {: RESULT = new UserType(nameleft, name); :}
+         |
+         type:t LB RB
+         {: t.incrementDimension();
+            RESULT = t;
+         :}
+         ;
+
+
+              
