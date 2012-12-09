@@ -25,9 +25,39 @@ parser code {:
     return lexer.getLineNumber();
   }
 
-  public void syntax_error(Symbol s) {
-    Token tok = (Token) s;
-    System.out.println("Line " + tok.getLine() + ": Syntax error; unexpected " + tok);
+  public void report_error(String message, Object info) {
+    if (info instanceof Token) {
+      Token tok = (Token) info;
+
+      String toPrint = "Line " + tok.getLine() + ": " + message + "; unexpected " + tok;
+      
+      // In many cases only a few actions would have gotten us out of this error.
+      // In those cases, we'd like to print what the expected tokens were.
+      List<String> possibleActions = getPossibleActions();
+      if (possibleActions.size() <= 5) {
+        toPrint += "; expected one of: " + CourtesyErrorReporter.joinStrings(possibleActions);
+      }
+      System.out.println(toPrint);
+
+      // In addition, there are some special cases that we inspect the stack and provide a relevant error
+      // message to the user.
+      CourtesyErrorReporter.tryAnalyzeError(tok, this.stack);
+    } else {
+      System.out.print(message);
+    }
+  }
+  
+  private List<String> getPossibleActions() {
+    // Goes through all of the possible symbols, and sees if one of them
+    // would've resulted in a SHIFT or a REDUCE operation (action != 0).
+    List<String> possibleActions = new ArrayList<String>();
+    for (Integer possibleSym : symNameGetter.getPossibleSymbols()) {
+      short action = get_action(((Symbol)this.stack.peek()).parse_state, possibleSym);
+      if (action != 0) {
+        possibleActions.add(symNameGetter.getSymbolName(possibleSym));
+      }
+    }
+    return possibleActions;
   }
 :};
 
@@ -86,8 +116,8 @@ non terminal List<Expression> arg_list;
 //////////////////////////
 // Precedence declarations
 
-precedence left ELSE;
 precedence left DOT;
+
 
 precedence left ASSIGN;
 precedence left LOR;
@@ -98,6 +128,10 @@ precedence left PLUS, MINUS;
 precedence left MULTIPLY, DIVIDE, MOD;
 precedence right UMINUS, LNEG;
 precedence left LB, RB, LP, RP;
+
+// Fix the dangling else problem
+precedence right ELSE;
+
 
 
 //////////////
@@ -254,13 +288,13 @@ action_statement ::= location:variable ASSIGN expression:expression SEMI
                      |
                      LCBR:begin statement_list:statements RCBR
                      {: RESULT = new StatementsBlock(beginleft, statements); :}
-                     |
-                     type:type ID:name ASSIGN expression:initValue SEMI
-                     {: RESULT = new LocalVariable(type, name, initValue); :}
                      ;
 
 decl_statement ::= type:type ID:name SEMI
                    {: RESULT = new LocalVariable(type, name); :}
+                   |
+                   type:type ID:name ASSIGN expression:initValue SEMI
+                   {: RESULT = new LocalVariable(type, name, initValue); :}
                    ;
 
 expression ::= location:location

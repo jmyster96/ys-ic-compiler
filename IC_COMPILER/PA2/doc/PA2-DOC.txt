@@ -5,16 +5,6 @@ Exercise 2
 
 Summary: In this exercise we implemented syntax analysis for the IC language, including AST construction.
 
-- We used the provided AST classes. They were perfect for our causes.
-- For the parser, we added some extra classes:
-  1. LiteralParser.
-  2. ClassMembersHelper.
-- Known design issues:
-  1. The value of the 'value' property of a Literal object with type 
-     LiteralTypes.INTEGER is of type String (details below).
-  2. Since Library.cup and IC.cup use the same lexer, they also need to
-     have the same terminal specifications.
-
 
 _______________
 CLASS HIERARCHY
@@ -24,7 +14,7 @@ The project consists of three packages:
 IC: Has the Compiler main class and some basic types that define the IC language.
 IC.Parser package: Does lexical and syntactic analysis.
 IC.AST pacakge: Holds the data that will be relevant in the future phases of the compilation process.
-                NOTE: This package was not changed at all for PA2 (from the version that was supplied
+                NOTE: This package was almost not changed for PA2 (from the version that was supplied
                       in the code skeleton).
 
 
@@ -44,6 +34,7 @@ package IC.Parser:
 
 > ClassMembersHelper.java - Used to hold the different fields of a class while parsing class members
                             (fields and methods).
+> CourtesyErrorReporter.java - Used for error printing during parsing. More details below.
 > IC.cup - The grammar and AST building instructions for IC language. Generates Parser.java and sym.java.
 > IC.lex - Unchanged from PA1. Generates Lexer.java.
 > LexicalError.java - Unchanged from PA1.
@@ -56,6 +47,10 @@ package IC.Parser:
 > Token.java - Unchanged from PA1.
 
 
+package IC.AST:
+
+Almost didn't change from the proposed AST. The AST classes themselves didn't change at all. The only change we did is in PrettyPrinter, so that it'd print to System.out as it goes, instead of building a giant String (used for debugging).
+
 ________________
 TESTING STRATEGY
 
@@ -65,6 +60,41 @@ a rule was added, we checked that we are making progress in parsing Quicksort.ic
 Later, after Quicksort.ic was parsed as a whole, the rest of the IC grammar was introduced to IC.cup.
 
 Then, the file OrderOfThings.ic was created to test for additional issues and corner cases we could've thought of.
+
+Finally the file TestBonus2Case.ic was created for the cases in bonus 2.
+
+_______________
+ERROR REPORTING
+
+For each syntax error, we try to show some informative info:
+
+- The line number in which the erroneous token appeared;
+- The erroneous token itself;
+- A list of expected tokens (up to 5):
+
+  Implemented by trying to see if an action could be taken for any other possible symbol.
+  For example, if trying to parse the following class member:
+  int [0] arrField;
+  The INTEGER(0) is an illegal symbol in that case.
+  int [(*)0] arrField;
+  But, by iterating through any other symbol in the current parse state, we can see that 
+  in that state the only possible other symbol is RB (because the parser knows that it currently produces 'type').
+  So that information is used: The action table row is scanned to see if any other symbol would be legal. If only
+  a limited number of symbols are legal, we print them.
+  
+  Implemented in IC.cup->Parser.java, getPossibleActions().
+  
+- For some rare cases, an additional specialized error message:
+
+  Currently detects some occurences of a single case (the one that was handled for PA2 bonus):
+  The cases of if (cond) int x;
+  
+  The detection is done by stupidly inspecting the stack and the current token, and looking for cases where the
+  current token is a type definition, and the closest ancestor is an IF, ELSE or WHILE statement. It'd probably miss
+  out on many cases.
+  
+  Implemented in CourtesyErrorReporter.java.
+
 
 ___________________
 KNOWN DESIGN ISSUES

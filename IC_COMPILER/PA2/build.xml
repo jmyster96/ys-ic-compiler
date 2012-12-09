@@ -61,8 +61,8 @@
     </replace>		
 
     <move file="LibraryParser.java" todir="${src}/IC/Parser"/>
+    <move file="sym.java" todir="${src}/IC/Parser"/>
     </target>
-
     <!--
        ===================================================================
          Generates the IC scanner

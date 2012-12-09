@@ -21,7 +21,7 @@ public class Token extends Symbol {
 	public String toString() {
 		String symName = symNameGetter.getSymbolName(this.sym);
 
-		String str = this.left + ": " + symName;
+		String str = symName;
 		if (value != null) {
 			String valueStr = value.toString();
 			str += "(" + valueStr + ")";

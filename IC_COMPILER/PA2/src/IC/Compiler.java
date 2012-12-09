@@ -33,10 +33,11 @@ public class Compiler {
       if (options.printAST) {
         // If asked in the command line, pretty-print the program
         // (and the Library signature file) to System.out.
-        PrettyPrinter libPrinter = new PrettyPrinter(options.libicPath);
-        System.out.println(libPrinter.visit(libraryClass));
-        PrettyPrinter printer = new PrettyPrinter(options.sourcePath);
-        System.out.println(printer.visit(root));
+        PrettyPrinter libPrinter = new PrettyPrinter(options.libicPath, new OutputStreamWriter(System.out));
+        libPrinter.visit(libraryClass);
+        PrettyPrinter printer = new PrettyPrinter(options.sourcePath, new OutputStreamWriter(System.out));
+        printer.visit(root);
+        System.out.println();
       }
     } catch (IOException e) {
       // We were asked to gracefully return 0 on errors.
@@ -69,9 +70,7 @@ public class Compiler {
       System.out.println(e);
       return null;
     } catch (Exception e) {
-      // Those are supposed to be Parser exceptions.
-      e.printStackTrace();
-      System.out.println(e);
+      // Those are supposed to be Parser exceptions. They should've been printed already.
       return null;
     }    
   }
