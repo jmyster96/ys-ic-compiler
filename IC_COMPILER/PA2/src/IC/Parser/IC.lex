@@ -46,7 +46,7 @@ CLASS_IDENTIFIER = {UPPER_LETTER}({ALPHA_NUMERIC})*
 IDENTIFIER = {LOWER_LETTER}({ALPHA_NUMERIC})*
 
 /* 
-   Valid string chars are: ASCII chars 32 - 126, except \ and ". 
+   Valid string chars are: ASCII chars 32 - 126, except \ and ".
    Additionally, '\\', '\n', '\t' and '\"' are valid.
 */
 VALID_ASCII_CHARS = [ !#-\[\]-~]

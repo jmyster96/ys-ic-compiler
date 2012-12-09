@@ -17,11 +17,14 @@ parser code {:
     super(lexer);
     this.lexer = lexer;
   }
+  
+  public void syntax_error(Symbol s) {
+    Token tok = (Token) s;
+    System.out.println("Line " + tok.getLine() + ": Syntax error; unexpected " + tok);
+  }
 :};
 
-scan with {:
-  return lexer.next_token();
-:};
+scan with {: return lexer.next_token(); :};
 
 ////////////////////////////////////////////
 // Symbol list (terminals and non-terminals)
@@ -63,7 +66,14 @@ non terminal Formal formal;
 // The grammar
 
 libic ::= CLASS:c CLASS_ID:name LCBR libmethod_list:libmethods RCBR
-          {: RESULT = new ICClass(cleft, name, new ArrayList<Field>(), libmethods); :}
+          {: if (!name.equals("Library")) {
+               throw new SyntaxError(
+                   "An illegal name was supplied for library signature class (should be 'Library').",
+                   cleft,
+                   name);
+             }
+             RESULT = new ICClass(cleft, name, new ArrayList<Field>(), libmethods); 
+          :}
           ;
 
 libmethod_list ::= {: RESULT = new ArrayList<Method>(); :}
@@ -73,7 +83,7 @@ libmethod_list ::= {: RESULT = new ArrayList<Method>(); :}
                       RESULT = libmethods;
                    :}
                    ;
-                   
+
 libmethod ::= STATIC type:type ID:name LP formals:formals RP SEMI
               {: RESULT = new LibraryMethod(type, name, formals); :}
               |

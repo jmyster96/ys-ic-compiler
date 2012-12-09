@@ -29,7 +29,7 @@ public class Token extends Symbol {
 		return str;
 	}
 
-    public int getLine() {
-	return this.left;
-    }
+	public int getLine() {
+		return this.left;
+	}
 }

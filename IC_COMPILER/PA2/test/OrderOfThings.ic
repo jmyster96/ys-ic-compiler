@@ -35,6 +35,21 @@ class ClassNumberOne {
     jJJJ = 1 + (2 * 3);
     kKKK = (1 + 2) * 3;
   }
+  void lookAtQuotesAndInts(string quote) {
+    Library.println("This is a quote!!\nWith two lines.");
+    Library.println("...with a\ttab and \"quotes\" too! Also some \\slashes\\.");
+    int a = 0;
+    a = 00;
+    a = 1;
+    a = -2147483647;
+    a = 2147483647;
+    a = -2147483648;  // This is parsed a UMINUS + Int literal which is too big :(
+    a = 2147483648;   // This should be illegal.
+    a = -5-3;
+  }
+  void callingAMethod() {
+    int a = methodCall(x1, x2, y1);
+  }
 }
 class ClassNumberTwo {}
 class Class3 {}

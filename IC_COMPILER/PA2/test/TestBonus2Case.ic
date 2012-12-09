@@ -1,0 +1,6 @@
+class BonusCase2 {
+  void method() {
+    if(true)
+      int x;
+  }
+}

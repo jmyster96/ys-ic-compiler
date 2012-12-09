@@ -20,7 +20,7 @@ parser code {:
     super(lexer);
     this.lexer = lexer;
   }
-            
+
   public int getLine() {
     return lexer.getLineNumber();
   }
@@ -71,7 +71,7 @@ non terminal Type type;
 non terminal List<Formal> formals;
 non terminal Formal formal;
 non terminal List<Statement> statement_list;
-non terminal Statement statement;
+non terminal Statement statement, decl_statement, action_statement;
 non terminal List<String> id_list;
 non terminal Expression expression;
 non terminal Location location;
@@ -146,7 +146,7 @@ fields ::= type:t id_list:names SEMI
            :}
            ;
 
-id_list ::= ID:id 
+id_list ::= ID:id
             {: List<String> ids = new ArrayList<String>();
                ids.add(id);
                RESULT = ids;
@@ -218,42 +218,50 @@ statement_list ::= {: RESULT = new ArrayList<Statement>(); :}
                    :}
                    ;
 
-statement ::= location:variable ASSIGN expression:expression SEMI
-              {: RESULT = new Assignment(variable, expression); :}
+statement ::= decl_statement:statement
+              {: RESULT = statement; :}
               |
-              call:call SEMI
-              {: RESULT = new CallStatement(call); :}
-              |
-              RETURN:r SEMI
-              {: RESULT = new Return(rleft); :}
-              |
-              RETURN:r expression:expression SEMI
-              {: RESULT = new Return(rleft, expression); :}
-              |
-              IF LP expression:condition RP statement:operation
-              {: RESULT = new If(condition, operation); :}
-              |
-              IF LP expression:condition RP statement:operation ELSE statement:elseOperation
-              {: RESULT = new If(condition, operation, elseOperation); :}
-              |
-              WHILE LP expression:condition RP statement:operation
-              {: RESULT = new While(condition, operation); :}
-              |
-              BREAK:b SEMI
-              {: RESULT = new Break(bleft); :}
-              |
-              CONTINUE:c SEMI
-              {: RESULT = new Continue(cleft); :}
-              |
-              LCBR:begin statement_list:statements RCBR
-              {: RESULT = new StatementsBlock(beginleft, statements); :}
-              |
-              type:type ID:name SEMI
-              {: RESULT = new LocalVariable(type, name); :}
-              |
-              type:type ID:name ASSIGN expression:initValue SEMI
-              {: RESULT = new LocalVariable(type, name, initValue); :}
+              action_statement:statement
+              {: RESULT = statement; :}
               ;
+
+action_statement ::= location:variable ASSIGN expression:expression SEMI
+                     {: RESULT = new Assignment(variable, expression); :}
+                     |
+                     call:call SEMI
+                     {: RESULT = new CallStatement(call); :}
+                     |
+                     RETURN:r SEMI
+                     {: RESULT = new Return(rleft); :}
+                     |
+                     RETURN:r expression:expression SEMI
+                     {: RESULT = new Return(rleft, expression); :}
+                     |
+                     IF LP expression:condition RP action_statement:operation
+                     {: RESULT = new If(condition, operation); :}
+                     |
+                     IF LP expression:condition RP action_statement:operation ELSE action_statement:elseOperation
+                     {: RESULT = new If(condition, operation, elseOperation); :}
+                     |
+                     WHILE LP expression:condition RP action_statement:operation
+                     {: RESULT = new While(condition, operation); :}
+                     |
+                     BREAK:b SEMI
+                     {: RESULT = new Break(bleft); :}
+                     |
+                     CONTINUE:c SEMI
+                     {: RESULT = new Continue(cleft); :}
+                     |
+                     LCBR:begin statement_list:statements RCBR
+                     {: RESULT = new StatementsBlock(beginleft, statements); :}
+                     |
+                     type:type ID:name ASSIGN expression:initValue SEMI
+                     {: RESULT = new LocalVariable(type, name, initValue); :}
+                     ;
+
+decl_statement ::= type:type ID:name SEMI
+                   {: RESULT = new LocalVariable(type, name); :}
+                   ;
 
 expression ::= location:location
                {: RESULT = location; :}
@@ -312,7 +320,7 @@ arg_list ::= {: RESULT = new ArrayList<Expression>(); :}
                 RESULT = arg_list;
              :}
              |
-             expression:arg COMMA arg_list:arg_list
+             arg_list:arg_list COMMA expression:arg
              {: arg_list.add(arg);
                 RESULT = arg_list;
              :}
@@ -380,13 +388,14 @@ literal ::= INTEGER:i
             {: RESULT = new Literal(ileft, LiteralTypes.INTEGER, i); :}
             |
             QUOTE:q
-            {: RESULT = new Literal(qleft, LiteralTypes.STRING, q); :}
+            {: String qvalue = LiteralParser.parseString(qleft, q);
+               RESULT = new Literal(qleft, LiteralTypes.STRING, qvalue); :}
             |
             TRUE:t
-            {: RESULT = new Literal(tleft, LiteralTypes.TRUE, t); :}
+            {: RESULT = new Literal(tleft, LiteralTypes.TRUE); :}
             |
             FALSE:f
-            {: RESULT = new Literal(fleft, LiteralTypes.FALSE, f); :}
+            {: RESULT = new Literal(fleft, LiteralTypes.FALSE); :}
             |
             NULL:v
             {: RESULT = new Literal(vleft, LiteralTypes.NULL); :}
