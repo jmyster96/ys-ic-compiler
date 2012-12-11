@@ -44,7 +44,7 @@ public class CourtesyErrorReporter {
 						&& ((Token)pastTokens.get(size - 1)).sym == sym.ELSE)
 				|| (size > 4
 						&& pastTokens.get(size - 4) instanceof Token
-						&& (((Token)pastTokens.get(size - 4)).sym == sym.IF)
-						 || ((Token)pastTokens.get(size - 4)).sym == sym.WHILE);
+						&& (((Token)pastTokens.get(size - 4)).sym == sym.IF
+						 || ((Token)pastTokens.get(size - 4)).sym == sym.WHILE));
 	}
 }

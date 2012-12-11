@@ -50,32 +50,35 @@ public class Compiler {
     Reader libSigFile = new FileReader(libicSigPath);
     Lexer lexer = new Lexer(libSigFile);
     LibraryParser parser = new LibraryParser(lexer);
-    return runParser(parser, libicSigPath);
+    return runParser(parser, libicSigPath, "library file " + libicSigPath);
   }
 
   private static Symbol parseICFile(String filepath) throws IOException {
     Reader icSourceFile = new FileReader(filepath);
     Lexer lexer = new Lexer(icSourceFile);
     Parser parser = new Parser(lexer);
-    return runParser(parser, filepath);
+    return runParser(parser, filepath, filepath);
   }
   
-  private static Symbol runParser(java_cup.runtime.lr_parser parser, String filepath) throws IOException {
+  private static Symbol runParser(java_cup.runtime.lr_parser parser, String filepath, String displayFilepath)
+      throws IOException {
     try {
       Symbol parseSymbol = parser.parse();
-      System.out.println("Parsed " + filepath + " successfully!");
+      System.out.println("Parsed " + displayFilepath + " successfully!");
       return parseSymbol;
     } catch (LexicalError e) {
+      System.out.println("Lexical error while parsing " + displayFilepath + ".");
       System.out.println(e);
       printLine(filepath, e.getLine());
       return null;
     } catch (SyntaxError e) {
-      // The error details have already been printed. Here we print the line itself.
+      System.out.println("Syntax error while parsing " + displayFilepath + ".");
       System.out.println(e);
       printLine(filepath, e.getLine());
       return null;
     } catch (Exception e) {
       // Not supposed to get here because our parser only throws SyntaxError
+      System.out.println("Unexpected error while parsing " + displayFilepath + ".");
       System.out.println(e);
       e.printStackTrace();
       return null;
