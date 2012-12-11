@@ -15,6 +15,7 @@ import IC.AST.*;
 
 parser code {:
   private Lexer lexer;
+  List<String> errorMessages = new ArrayList<String>();
 
   public Parser(Lexer lexer) {
     super(lexer);
@@ -29,21 +30,24 @@ parser code {:
     if (info instanceof Token) {
       Token tok = (Token) info;
 
-      String toPrint = "Line " + tok.getLine() + ": " + message + "; unexpected " + tok;
+      String errorMessage = "Line " + tok.getLine() + ": " + message + "; unexpected " + tok;
       
       // In many cases only a few actions would have gotten us out of this error.
       // In those cases, we'd like to print what the expected tokens were.
       List<String> possibleActions = getPossibleActions();
       if (possibleActions.size() > 0 && possibleActions.size() <= 5) {
-        toPrint += "; expected one of: " + CourtesyErrorReporter.joinStrings(possibleActions);
+        errorMessage += "; expected one of: " + CourtesyErrorReporter.joinStrings(possibleActions);
       }
-      System.out.println(toPrint);
+      errorMessages.add(errorMessage);
 
       // In addition, there are some special cases that we inspect the stack and provide a relevant error
       // message to the user.
-      CourtesyErrorReporter.tryAnalyzeError(tok, this.stack);
+      String additionalError = CourtesyErrorReporter.tryAnalyzeError(tok, this.stack);
+      if (additionalError != null) {
+        errorMessages.add(additionalError);
+      }
     } else {
-      System.out.print(message);
+      errorMessages.add(message);
     }
   }
   
@@ -52,13 +56,15 @@ parser code {:
     // (Taken from super, see http://www.docjar.org/html/api/java_cup/runtime/lr_parser.java.html)
     done_parsing();
 
-    // report_error(message, info);
+    String realMessage = "Can't recover from previous error(s):\n" +
+        CourtesyErrorReporter.joinStrings(errorMessages, "\n");
+
     if (info instanceof Token) {
       Token tok = (Token) info;
-      throw new SyntaxError("Can't recover from previous error(s)", tok.getLine());
+      throw new SyntaxError(realMessage, tok.getLine());
     }
     
-    throw new SyntaxError("Can't recover from previous error(s)");
+    throw new SyntaxError(realMessage);
   }
   
   private List<String> getPossibleActions() {

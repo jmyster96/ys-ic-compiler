@@ -12,15 +12,70 @@ import IC.AST.*;
 
 parser code {:
   private Lexer lexer;
+  List<String> errorMessages = new ArrayList<String>();
 
   public LibraryParser(Lexer lexer) {
     super(lexer);
     this.lexer = lexer;
   }
+
+  public int getLine() {
+    return lexer.getLineNumber();
+  }
+
+  public void report_error(String message, Object info) {
+    if (info instanceof Token) {
+      Token tok = (Token) info;
+
+      String errorMessage = "Line " + tok.getLine() + ": " + message + "; unexpected " + tok;
+      
+      // In many cases only a few actions would have gotten us out of this error.
+      // In those cases, we'd like to print what the expected tokens were.
+      List<String> possibleActions = getPossibleActions();
+      if (possibleActions.size() > 0 && possibleActions.size() <= 5) {
+        errorMessage += "; expected one of: " + CourtesyErrorReporter.joinStrings(possibleActions);
+      }
+      errorMessages.add(errorMessage);
+
+      // In addition, there are some special cases that we inspect the stack and provide a relevant error
+      // message to the user.
+      String additionalError = CourtesyErrorReporter.tryAnalyzeError(tok, this.stack);
+      if (additionalError != null) {
+        errorMessages.add(additionalError);
+      }
+    } else {
+      errorMessages.add(message);
+    }
+  }
   
-  public void syntax_error(Symbol s) {
-    Token tok = (Token) s;
-    System.out.println("Line " + tok.getLine() + ": Syntax error; unexpected " + tok);
+  public void report_fatal_error(String message, Object info) throws SyntaxError {
+    // Stop parsing (not really necessary since we throw an exception, but)
+    // (Taken from super, see http://www.docjar.org/html/api/java_cup/runtime/lr_parser.java.html)
+    done_parsing();
+
+    String realMessage = "Can't recover from previous error(s):\n" +
+        CourtesyErrorReporter.joinStrings(errorMessages, "\n");
+
+    if (info instanceof Token) {
+      Token tok = (Token) info;
+      throw new SyntaxError(realMessage, tok.getLine());
+    }
+    
+    throw new SyntaxError(realMessage);
+  }
+  
+  private List<String> getPossibleActions() {
+    // Goes through all of the possible symbols, and sees if one of them
+    // would've resulted in a SHIFT or a REDUCE operation (action != 0).
+    List<String> possibleActions = new ArrayList<String>();
+    if (stack.empty()) return possibleActions;
+    for (Integer possibleSym : symNameGetter.getPossibleSymbols()) {
+      short action = get_action(((Symbol)this.stack.peek()).parse_state, possibleSym);
+      if (action != 0) {
+        possibleActions.add(symNameGetter.getSymbolName(possibleSym));
+      }
+    }
+    return possibleActions;
   }
 :};
 

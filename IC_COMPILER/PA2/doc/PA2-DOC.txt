@@ -70,6 +70,7 @@ For each syntax error, we try to show some informative info:
 
 - The line number in which the erroneous token appeared;
 - The erroneous token itself;
+- The whole line to give context;
 - A list of expected tokens (up to 5):
 
   Implemented by trying to see if an action could be taken for any other possible symbol.
@@ -95,6 +96,7 @@ For each syntax error, we try to show some informative info:
   
   Implemented in CourtesyErrorReporter.java.
 
+We did not implement bonus 1. :(
 
 ___________________
 KNOWN DESIGN ISSUES
@@ -130,6 +132,12 @@ only the version of sym.java from generating IC.cup is used.
 
 So the two of them have to be synced.
 
+
+3. Duplicated logic in Library.cup and IC.cup.
+
+Some of the code relating to error reporting is duplicated in IC.cup and Library.cup. Since some of it
+couldn't be refactored out of the .cup files (since they access protected fields of lr_parser), all of it
+was duplicated.
 
 ___________
 THE GRAMMAR

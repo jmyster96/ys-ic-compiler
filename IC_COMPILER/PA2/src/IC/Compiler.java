@@ -71,6 +71,7 @@ public class Compiler {
       return null;
     } catch (SyntaxError e) {
       // The error details have already been printed. Here we print the line itself.
+      System.out.println(e);
       printLine(filepath, e.getLine());
       return null;
     } catch (Exception e) {

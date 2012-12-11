@@ -5,23 +5,28 @@ import java.util.Collection;
 import java.util.List;
 
 public class CourtesyErrorReporter {
-	public static void tryAnalyzeError(Token currentToken, AbstractList pastTokens) {
+	public static String tryAnalyzeError(Token currentToken, AbstractList pastTokens) {
 		// Currently detects some occurences of a single case (the one we handled in PA2 bonus):
 		// The cases of if (cond) int x;
 		if (isTypeSymbol(currentToken.sym) && directParentIsConditional(pastTokens)) {
-			System.out.println("Line " + currentToken.getLine() + 
-					": (PA2 BONUS) Can't have a declaration statement as an only operation inside a conditional branch.");
+			return "Line " + currentToken.getLine() + 
+					": (PA2 BONUS) Can't have a declaration statement as an only operation inside a conditional branch.";
 		} else {
+		  // Show the parsing stack to help understand error; not for user: only for development of this class
 			// System.out.println(joinStrings(pastTokens));
 		}
+		return null;
 	}
 
 	public static String joinStrings(Collection<?> parts) {
+	  return joinStrings(parts, ", ");
+  }
+	public static String joinStrings(Collection<?> parts, String delimeter) {
 		String joined = "";
 		int count = 0;
 		for (Object part : parts) {
 			if (count > 0)
-				joined += ", ";
+				joined += delimeter;
 			joined += part;
 			++count;
 		}

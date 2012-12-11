@@ -12,8 +12,8 @@ class BonusCase2 {
       else
         x = 3;
     else
-      int a = 7;
-    a = 7;
+      int a = 7;  // <-- This should be a syntax error
+      // a = 7;
   }
   int [] a;
   // int [a]; // Syntax error
