@@ -60,19 +60,38 @@ public class Compiler {
     return runParser(parser, filepath);
   }
   
-  private static Symbol runParser(java_cup.runtime.lr_parser parser, String filepath) {
+  private static Symbol runParser(java_cup.runtime.lr_parser parser, String filepath) throws IOException {
     try {
       Symbol parseSymbol = parser.parse();
       System.out.println("Parsed " + filepath + " successfully!");
       return parseSymbol;
     } catch (LexicalError e) {
-      // We were asked to gracefully return 0 on user-code related exceptions.
       System.out.println(e);
+      printLine(filepath, e.getLine());
+      return null;
+    } catch (SyntaxError e) {
+      // The error details have already been printed. Here we print the line itself.
+      printLine(filepath, e.getLine());
       return null;
     } catch (Exception e) {
-      // Those are supposed to be Parser exceptions. They should've been printed already.
+      // Not supposed to get here because our parser only throws SyntaxError
+      System.out.println(e);
+      e.printStackTrace();
       return null;
-    }    
+    }
+  }
+
+  private static void printLine(String filepath, int line) throws IOException {
+    BufferedReader in = new BufferedReader(new FileReader(filepath));
+    int currentLine = 0;
+    String strLine;
+    while ((strLine = in.readLine()) != null)   {
+      if (++currentLine == line) {
+        // Print the content on the console
+        System.out.println("Line " + line + ": " + strLine);
+        break;
+      }
+    } 
   }
 
   static class Options {
@@ -85,8 +104,8 @@ public class Compiler {
       this.sourcePath = null;
     }
     private static void handleWrongSyntax() {
-      System.err.println("Can't run compiler.");
-      System.err.println("Usage:\n\tjava IC.Compiler <file.ic> [ -L</path/to/libic.sig> ] [ -print-ast ]");
+      System.out.println("Can't run compiler.");
+      System.out.println("Usage:\n\tjava IC.Compiler <file.ic> [ -L</path/to/libic.sig> ] [ -print-ast ]");
       System.exit(1);
     }
     public static Options parseCommandLineArgs(String[] args) {
@@ -104,6 +123,7 @@ public class Compiler {
         } else if (!arg.startsWith("-") && options.sourcePath == null) {
           options.sourcePath = arg;
         } else {
+          System.out.println("Unrecognized flag: " + arg);
           handleWrongSyntax();
         }
       }
@@ -117,12 +137,12 @@ public class Compiler {
       File f = new File(libicPath);
       boolean valid = true;
       if (!f.exists()) {
-        System.err.println("Can't find library signature file at path: " + libicPath);
+        System.out.println("Can't find library signature file at path: " + libicPath);
         valid = false;
       }
       f = new File(sourcePath);
       if (!f.exists()) {
-        System.err.println("Can't find source file at path: " + sourcePath);
+        System.out.println("Can't find source file at path: " + sourcePath);
         valid = false;
       }
       if (!valid) {

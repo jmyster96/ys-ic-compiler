@@ -2,23 +2,21 @@ package IC.Parser;
 
 public class SyntaxError extends Exception {
 	private int line;
-	private String value;
 
 	public SyntaxError(String message) {
 		super(message);
 	}
 
-	public SyntaxError(String message, int line, String value) {
+	public SyntaxError(String message, int line) {
 		super(message);
-		this.line = line + 1;
-		this.value = value;
+		this.line = line;
 	}
 
 	public String toString() {
-		if (this.value == null) {
-			return this.line + ": Syntax error: " + this.getMessage();
-		} else {
-			return this.line + ": Syntax error: " + this.getMessage() + " '" + this.value + "'";
-		}
+		return this.line + ": Syntax error: " + this.getMessage();
+	}
+	
+	public int getLine() {
+	   return this.line;
 	}
 }

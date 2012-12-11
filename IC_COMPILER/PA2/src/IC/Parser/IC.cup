@@ -34,7 +34,7 @@ parser code {:
       // In many cases only a few actions would have gotten us out of this error.
       // In those cases, we'd like to print what the expected tokens were.
       List<String> possibleActions = getPossibleActions();
-      if (possibleActions.size() <= 5) {
+      if (possibleActions.size() > 0 && possibleActions.size() <= 5) {
         toPrint += "; expected one of: " + CourtesyErrorReporter.joinStrings(possibleActions);
       }
       System.out.println(toPrint);
@@ -47,10 +47,25 @@ parser code {:
     }
   }
   
+  public void report_fatal_error(String message, Object info) throws SyntaxError {
+    // Stop parsing (not really necessary since we throw an exception, but)
+    // (Taken from super, see http://www.docjar.org/html/api/java_cup/runtime/lr_parser.java.html)
+    done_parsing();
+
+    // report_error(message, info);
+    if (info instanceof Token) {
+      Token tok = (Token) info;
+      throw new SyntaxError("Can't recover from previous error(s)", tok.getLine());
+    }
+    
+    throw new SyntaxError("Can't recover from previous error(s)");
+  }
+  
   private List<String> getPossibleActions() {
     // Goes through all of the possible symbols, and sees if one of them
     // would've resulted in a SHIFT or a REDUCE operation (action != 0).
     List<String> possibleActions = new ArrayList<String>();
+    if (stack.empty()) return possibleActions;
     for (Integer possibleSym : symNameGetter.getPossibleSymbols()) {
       short action = get_action(((Symbol)this.stack.peek()).parse_state, possibleSym);
       if (action != 0) {

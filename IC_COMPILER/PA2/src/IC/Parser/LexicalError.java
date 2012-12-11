@@ -21,4 +21,8 @@ public class LexicalError extends Exception {
 			return this.line + ": Lexical error: " + this.getMessage() + " '" + this.value + "'";
 		}
 	}
+	
+	public int getLine() {
+	   return this.line;
+	}
 }
