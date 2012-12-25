@@ -1,0 +1,12 @@
+class UnaryTests {
+  void test() {
+    int x = 3;
+    x = -3;
+    x = --3;
+    x = ---3;
+    x = 5-3;
+    x = 5--3;
+    x = 5---3;
+    x = 5----3;
+  }
+}

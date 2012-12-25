@@ -1,0 +1,56 @@
+class ClassNumberOne {
+  int x1, x2, x3;
+  int returnX1() {
+    return this.x1;
+  }
+  int y1, y2;
+  int returnX2() {
+    // Several statements
+    int z1 = y1;
+    int z2 = y2;
+    return this.x2;
+  }
+  int z1;
+  void takeSeveralArgs(string arg1, int arg2, UserType arg3) {
+  }
+  void takeASingleArg(string iAmSingle) {
+  }
+  void letsCheckPrecedences() {
+    // This gets decided by the grammar, no need for precedence
+    int p = !!--g;
+    int g = -5+3;
+    aAAA = -(5+3);
+    aAbB = -(-5--3);  // Should be: unary minus -> Parenthesized expression(Minus(unary minus 5, unary minus 3))
+    bBBB = -5 + 3;
+    cCCC = 5+3.length;
+    if (!p) {
+      // Do nothing
+    }
+    dDDD = 1 + 2 * 3;
+    eEEE = 1 * 2 + 3;
+    fFFF = 1 + 2 + 3;
+    gGGG = 1 * 2 * 3;
+    hHHH = 1 * (2 + 3);
+    iIII = (1 * 2) + 3;
+    jJJJ = 1 + (2 * 3);
+    kKKK = (1 + 2) * 3;
+  }
+  void lookAtQuotesAndInts(string quote) {
+    Library.println("This is a quote!!\nWith two lines.");
+    Library.println("...with a\ttab and \"quotes\" too! Also some \\slashes\\.");
+    int a = 0;
+    a = 00;
+    a = 1;
+    a = -2147483647;
+    a = 2147483647;
+    a = -2147483648;  // This is parsed a UMINUS + Int literal which is too big :(
+    a = 2147483648;   // This should be illegal.
+    a = -5-3;
+  }
+  void callingAMethod() {
+    int a = methodCall(x1, x2, y1);
+  }
+}
+class ClassNumberTwo {}
+class Class3 {}
+class Class4 {boolean hi_there;}
