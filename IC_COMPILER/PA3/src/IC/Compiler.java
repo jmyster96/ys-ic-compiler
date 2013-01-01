@@ -4,7 +4,9 @@ import IC.AST.ICClass;
 import IC.AST.PrettyPrinter;
 import IC.AST.Program;
 import IC.Parser.*;
+import IC.Semantic.SemanticError;
 import IC.Symbols.GlobalSymbolTable;
+import IC.Symbols.SymbolTable;
 import IC.Symbols.SymbolTableBuilderVisitor;
 
 import java.io.*;
@@ -31,27 +33,56 @@ public class Compiler {
 				// Parsing failed. Errors have been printed.
 				System.exit(0);
 			}
-			Program root = (Program) parseSymbol.value;
+			Program program = (Program) parseSymbol.value;
 
 			if (options.printAST) {
 				// If asked in the command line, pretty-print the program
 				// (and the Library signature file) to System.out.
-				printAST(options, libraryClass, root);
+				printAST(options, libraryClass, program);
 			}
+			
+			doSemanticChecks(options, libraryClass, program);
 
-			root.getClasses().add(0, libraryClass);
-			SymbolTableBuilderVisitor symTabBuilder = new SymbolTableBuilderVisitor(
-					new File(options.sourcePath).getName());
-			GlobalSymbolTable symbolTable = symTabBuilder.visit(root);
-
-			if (options.dumpSymTab) {
-				System.out.println();
-				System.out.println(symbolTable.toString());
-			}
 		} catch (IOException e) {
 			// We were asked to gracefully return 0 on errors.
 			System.out.println(e);
 			System.exit(0);
+		}
+	}
+
+	private static void doSemanticChecks(Options options, ICClass libraryClass,
+			Program program) {
+		SymbolTable symbolTable;
+//			try {
+			// ///////////////////////////
+			// Semantic checks start here
+
+			// 1. Add the Library class as an actual class for simplicity.
+			program.getClasses().add(0, libraryClass);
+
+			// 2. Build the Symbol Table and Type Table.
+			SymbolTableBuilderVisitor symTabBuilder = new SymbolTableBuilderVisitor(
+					new File(options.sourcePath).getName());
+			symbolTable = symTabBuilder.visit(program);
+
+			//
+			// (1) scope rules (Section 10 in the IC specification);
+			// (2) type-checking rules (Section 15), including a check that
+			// the class hierarchy is a tree and checking
+			// correct overriding of instance methods in subclasses;
+			// (3) checking that the program contains a single main method
+			// with the correct signature;
+			// (4) that break and continue statements appear only inside
+			// loops;
+			// (5) that the this keyword is only used in instance methods;
+			// and
+			// (6) that the library class has the correct name (Library).
+//			} catch (SemanticError e) {
+//
+//			}
+		if (options.dumpSymTab) {
+			System.out.println();
+			System.out.println(symbolTable.toString());
 		}
 	}
 

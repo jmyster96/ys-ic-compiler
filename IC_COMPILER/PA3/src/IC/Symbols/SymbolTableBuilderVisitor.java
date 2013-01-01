@@ -47,6 +47,8 @@ public class SymbolTableBuilderVisitor implements Visitor {
 
 	private String programName;
 	private SymbolTypeTable typeTable;
+	private static Logger logger = Logger
+			.getLogger(SymbolTableBuilderVisitor.class.getName());
 
 	public SymbolTableBuilderVisitor(String programName) {
 		this.programName = programName;
@@ -76,6 +78,9 @@ public class SymbolTableBuilderVisitor implements Visitor {
 			SymbolTable parentSymbolTable = clazz.hasSuperClass() ? symbolTableForClass
 					.get(clazz.getSuperClassName()) : globalTable;
 			parentSymbolTable.addChild(classTable);
+			if (clazz.hasSuperClass()) {
+				typeTable.setSuperForClass(clazz);
+			}
 		}
 
 		return globalTable;
@@ -142,9 +147,6 @@ public class SymbolTableBuilderVisitor implements Visitor {
 			setParentNamesForChildren(child);
 		}
 	}
-
-	static Logger logger = Logger.getLogger(SymbolTableBuilderVisitor.class
-			.getName());
 
 	class SymbolOrTables {
 		Symbol symbol;

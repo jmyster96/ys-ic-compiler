@@ -2,6 +2,9 @@ package IC.Symbols;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
+
+import sun.util.logging.resources.logging;
 
 import IC.AST.Formal;
 import IC.AST.ICClass;
@@ -15,7 +18,9 @@ import java_cup.symbol;
 public class SymbolTypeTable {
 	String programName;
 	List<SymbolType> symbolTypes = new ArrayList<SymbolType>();
-	
+	private static Logger logger = Logger
+			.getLogger(SymbolTypeTable.class.getName());
+
 	public SymbolTypeTable(String programName) {
 		this.programName = programName;
 	}
@@ -93,5 +98,23 @@ public class SymbolTypeTable {
 			sb.append("\n");
 		}
 		return sb.toString();
+	}
+
+	public void setSuperForClass(ICClass clazz) {
+		if (clazz.hasSuperClass()) {
+			logger.info(clazz.getName() + " has super.");
+			ClassSymbolType classType = getClassSymbolByClassName(clazz
+					.getName());
+			classType.setBaseClassTypeId(getSymbolIdByClassName(clazz
+					.getSuperClassName()));
+		}
+	}
+
+	private int getSymbolIdByClassName(String className) {
+		return addOrGetSymbolTypeId(new ClassSymbolType(className));
+	}
+
+	private ClassSymbolType getClassSymbolByClassName(String className) {
+		return (ClassSymbolType) getSymbolById(getSymbolIdByClassName(className));
 	}
 }

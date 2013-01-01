@@ -3,9 +3,6 @@ package IC.Symbols;
 import java.util.ArrayList;
 import java.util.List;
 
-import IC.AST.Formal;
-import IC.AST.Method;
-import IC.AST.Type;
 import IC.Parser.CourtesyErrorReporter;
 
 public class MethodSymbolType extends SymbolType {
@@ -32,7 +29,6 @@ public class MethodSymbolType extends SymbolType {
 		return builder.toString();
 	}
 
-	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof MethodSymbolType)) {
 			return false;
@@ -42,8 +38,7 @@ public class MethodSymbolType extends SymbolType {
 				&& listsEqual(other.formalsTypes, this.formalsTypes);
 	}
 
-	private boolean listsEqual(List<?> list1,
-			List<?> list2) {
+	private boolean listsEqual(List<?> list1, List<?> list2) {
 		if (list1.size() != list2.size()) {
 			return false;
 		}
