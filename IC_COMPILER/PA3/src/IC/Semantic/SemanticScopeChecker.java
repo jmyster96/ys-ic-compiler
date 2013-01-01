@@ -1,16 +1,13 @@
 package IC.Semantic;
 
+import java.util.Stack;
+
 import IC.AST.*;
 
 
 public class SemanticScopeChecker implements Visitor {
 
-	private IC.Symbols.GlobalSymbolTable global;
-
-    public SemanticScopeChecker(IC.Symbols.GlobalSymbolTable global) {
-        this.global = global;
-    }
-
+	private Stack<IC.Symbols.SymbolTable> symScopeStack;
     /*
      * When visit fails return null 
      * otherwise return true (!= null) 
@@ -18,7 +15,8 @@ public class SemanticScopeChecker implements Visitor {
     @Override
 	public Object visit(Program program) {
         // recursive call to class
-        for(ICClass clazz: program.getClasses()){
+    	symScopeStack.push(program.getGlobalSymbolTable());
+    	for(ICClass clazz: program.getClasses()){
                 if (clazz.accept(this) == null) return null;
         }
         return true;
@@ -26,12 +24,14 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(ICClass clazz) {
+    	symScopeStack.push(clazz.getClassSymbolTable());
         for(Method meth: clazz.getMethods()){
                 if (meth.accept(this) == null) return null;
         }
         for(Field fld: clazz.getFields()){
             if (fld.accept(this) == null) return null;
         }
+    	symScopeStack.pop();
         return true;      
     }
 
@@ -44,7 +44,10 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(VirtualMethod method) {
-		for (Formal foraml : method.getFormals()) {
+    	symScopeStack.push(method.getMethodSymbolTable());
+    	//FIXME: type check: validate that doesn't already exist 
+    	
+    	for (Formal foraml : method.getFormals()) {
 			if(foraml.accept(this) == null) {return null;}
 		}
 		for (Statement stmnt : method.getStatements()) {
@@ -53,12 +56,13 @@ public class SemanticScopeChecker implements Visitor {
 		if (method.getType().accept(this) == null) {
 			return null;
 		}
-		method.getName(); //FIXME: scope check: validate that exist 
+		symScopeStack.pop();
 		return true;
 	}
 
 	@Override
 	public Object visit(StaticMethod method) {
+		symScopeStack.push(method.getMethodSymbolTable());
 		for (Formal foraml : method.getFormals()) {
 			if(foraml.accept(this) == null) {return null;}
 		}
@@ -68,12 +72,14 @@ public class SemanticScopeChecker implements Visitor {
 		if (method.getType().accept(this) == null) {
 			return null;
 		}
-		method.getName(); //FIXME: validate that doesn't exist
+		method.getName(); //FIXME: type checking :validate that doesn't exist
+		symScopeStack.pop();
 		return true;
 	}
 
 	@Override
 	public Object visit(LibraryMethod method) {
+		symScopeStack.push(method.getMethodSymbolTable());
 		for (Formal foraml : method.getFormals()) {
 			if(foraml.accept(this) == null) {return null;}
 		}
@@ -83,7 +89,8 @@ public class SemanticScopeChecker implements Visitor {
 		if (method.getType().accept(this) == null) {
 			return null;
 		}
-		method.getName(); //FIXME: validate that exist
+		method.getName(); //FIXME: type checking validate that exist
+		symScopeStack.pop();
 		return true;
 	}
 
@@ -92,13 +99,14 @@ public class SemanticScopeChecker implements Visitor {
 		if(formal.getType().accept(this) == null) {
 			return null;
 		}
-		/* FIXME: 
-		 * validate that formal.getName()exists in scope
-		 * validate that formal.getType() can be sent to function should be done 
+		/*
+		 * validation that formal.getType() can be sent to function 
+		 * should be done brfore
 		 * 
 		 */
-		
-		formal.getName();
+		if (symScopeStack.peek().lookup(formal.getName()) == null ) {
+			return null;
+		}
 		return true;
 	}
 
@@ -110,8 +118,8 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(UserType type) {
-		type.getName();// FIXME validate that exists a type		
-		return null;
+		type.getName();// FIXME: type checking: validate that exists a type		
+		return true;
 	}
 
 	@Override
@@ -119,7 +127,10 @@ public class SemanticScopeChecker implements Visitor {
 		if (assignment.getAssignment().accept(this) == null)	{
 			return null;
 		}
-		assignment.getVariable().accept(this);
+		if (assignment.getVariable().accept(this) == null) {
+			return null;
+		}
+		//FIXME: semantic check: validate that assignment type is compatible to variable type
 		return true;
 	}
 
@@ -138,6 +149,7 @@ public class SemanticScopeChecker implements Visitor {
 		}
 		// FIXME: type-check check if return value matches functions definition
 		//look at father->father->type (ergo: return type of method) 
+		//type check: check that we are inside a method
 		return null;
 	}
 
@@ -146,6 +158,7 @@ public class SemanticScopeChecker implements Visitor {
 		if (ifStatement.getCondition().accept(this) == null) return null;
 		if (ifStatement.getOperation().accept(this) == null) return null;
 		if (ifStatement.getElseOperation().accept(this) == null) return null;
+		//FIXME: semantic check: check that we are inside a method
 		return true;
 	}
 
@@ -153,26 +166,29 @@ public class SemanticScopeChecker implements Visitor {
 	public Object visit(While whileStatement) {
 		if (whileStatement.getCondition().accept(this) == null) return null;
 		if (whileStatement.getOperation().accept(this) == null) return null;
+		//type check: check that we are inside a method
 		return true;
 	}
 
 	@Override
 	public Object visit(Break breakStatement) {
-		// FIXME: validate that inside statementsBlock
+		// FIXME: validate that inside statementsBlock of type loop
 		return true;
 	}
 
 	@Override
 	public Object visit(Continue continueStatement) {
-		// FIXME: validate that inside statementsBlock
+		// FIXME: validate that inside statementsBlock of type loop
 		return true;
 	}
 
 	@Override
 	public Object visit(StatementsBlock statementsBlock) {
+		symScopeStack.push(statementsBlock.getStatementsBlockSymbolTable());
 		for(Statement stmt : statementsBlock.getStatements()) {
 			if (stmt.accept(this) == null) return null;
 		}
+		symScopeStack.pop();
 		return true;
 	}
 
