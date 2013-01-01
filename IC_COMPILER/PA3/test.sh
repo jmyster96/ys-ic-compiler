@@ -1,4 +1,2 @@
-(ant parser &&
-ant libparser &&
-ant build &&
+(ant build &&
 ./run_compiler.sh $1)

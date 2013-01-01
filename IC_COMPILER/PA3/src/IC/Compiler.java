@@ -4,6 +4,9 @@ import IC.AST.ICClass;
 import IC.AST.PrettyPrinter;
 import IC.AST.Program;
 import IC.Parser.*;
+import IC.Symbols.GlobalSymbolTable;
+import IC.Symbols.SymbolTableBuilderVisitor;
+
 import java.io.*;
 import java_cup.runtime.Symbol;
 
@@ -33,19 +36,33 @@ public class Compiler {
 			if (options.printAST) {
 				// If asked in the command line, pretty-print the program
 				// (and the Library signature file) to System.out.
-				PrettyPrinter libPrinter = new PrettyPrinter(options.libicPath,
-						new OutputStreamWriter(System.out));
-				libPrinter.visit(libraryClass);
-				PrettyPrinter printer = new PrettyPrinter(options.sourcePath,
-						new OutputStreamWriter(System.out));
-				printer.visit(root);
+				printAST(options, libraryClass, root);
+			}
+
+			SymbolTableBuilderVisitor symTabBuilder = new SymbolTableBuilderVisitor(
+					new File(options.sourcePath).getName());
+			GlobalSymbolTable symbolTable = symTabBuilder.visit(root);
+
+			if (options.dumpSymTab) {
 				System.out.println();
+				System.out.println(symbolTable.toString());
 			}
 		} catch (IOException e) {
 			// We were asked to gracefully return 0 on errors.
 			System.out.println(e);
 			System.exit(0);
 		}
+	}
+
+	private static void printAST(Options options, ICClass libraryClass,
+			Program root) {
+		PrettyPrinter libPrinter = new PrettyPrinter(options.libicPath,
+				new OutputStreamWriter(System.out));
+		libPrinter.visit(libraryClass);
+		PrettyPrinter printer = new PrettyPrinter(options.sourcePath,
+				new OutputStreamWriter(System.out));
+		printer.visit(root);
+		System.out.println();
 	}
 
 	private static Symbol parseLibraryFile(String libicSigPath)
@@ -109,6 +126,7 @@ public class Compiler {
 		private String libicPath;
 		private String sourcePath;
 		private boolean printAST;
+		private boolean dumpSymTab;
 
 		private Options() {
 			this.libicPath = "libic.sig";
@@ -136,7 +154,7 @@ public class Compiler {
 				} else if (arg.equals("-print-ast")) {
 					options.printAST = true;
 				} else if (arg.equals("-dump-symtab")) {
-					options.printAST = true;
+					options.dumpSymTab = true;
 				} else if (!arg.startsWith("-") && options.sourcePath == null) {
 					options.sourcePath = arg;
 				} else {

@@ -1,8 +1,10 @@
 package IC.Symbols;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 import IC.AST.ArrayLocation;
 import IC.AST.Assignment;
@@ -43,24 +45,29 @@ import IC.AST.While;
 
 public class SymbolTableBuilderVisitor implements Visitor {
 
-	@Override
-	public Object visit(Program program) {
-		GlobalSymbolTable globalTable = new GlobalSymbolTable();
+	private String programName;
 
-		Map<String, StaticClassSymbolTable> symbolTableForClass = new HashMap<String, StaticClassSymbolTable>();
+	public SymbolTableBuilderVisitor(String programName) {
+		this.programName = programName;
+	}
+
+	@Override
+	public GlobalSymbolTable visit(Program program) {
+		GlobalSymbolTable globalTable = new GlobalSymbolTable(programName);
+
+		Map<String, ClassSymbolTable> symbolTableForClass = new HashMap<String, ClassSymbolTable>();
 
 		for (ICClass clazz : program.getClasses()) {
 			Symbol classSymbol = new Symbol(clazz.getName(), SymbolKind.CLASS,
 					new ClassSymbolType(clazz.getName()));
 			globalTable.insert(classSymbol);
 
-			StaticClassSymbolTable classTable = (StaticClassSymbolTable) clazz
-					.accept(this);
+			ClassSymbolTable classTable = (ClassSymbolTable) clazz.accept(this);
 			symbolTableForClass.put(clazz.getName(), classTable);
 		}
 
 		for (ICClass clazz : program.getClasses()) {
-			StaticClassSymbolTable classTable = symbolTableForClass.get(clazz
+			ClassSymbolTable classTable = symbolTableForClass.get(clazz
 					.getName());
 			SymbolTable parentSymbolTable = clazz.hasSuperClass() ? symbolTableForClass
 					.get(clazz.getSuperClassName()) : globalTable;
@@ -71,33 +78,29 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	}
 
 	@Override
-	public Object visit(ICClass icClass) {
-		StaticClassSymbolTable staticClassTable = new StaticClassSymbolTable();
-		InstanceClassSymbolTable instanceClassTable = new InstanceClassSymbolTable();
+	public ClassSymbolTable visit(ICClass icClass) {
+		ClassSymbolTable classTable = new ClassSymbolTable(icClass.getName());
 		for (Field field : icClass.getFields()) {
 			Symbol fieldSymbol = new Symbol(field.getName(), SymbolKind.FIELD,
 					createSymbolType(field.getType()));
-			instanceClassTable.insert(fieldSymbol);
+			classTable.insert(fieldSymbol);
 		}
 
 		for (Method method : icClass.getMethods()) {
 			Symbol methodSymbol;
-			SymbolTable parentSymbolTable;
 			if (method instanceof VirtualMethod) {
 				methodSymbol = new Symbol(method.getName(),
 						SymbolKind.VIRTUAL_METHOD, createSymbolType(method));
-				parentSymbolTable = instanceClassTable;
 			} else { // method is a StaticMethod or a LibraryMethod)
 				methodSymbol = new Symbol(method.getName(),
 						SymbolKind.STATIC_METHOD, createSymbolType(method));
-				parentSymbolTable = staticClassTable;
 			}
 			MethodSymbolTable methodTable = (MethodSymbolTable) method
 					.accept(this);
-			parentSymbolTable.addChild(methodTable);
-			parentSymbolTable.insert(methodSymbol);
+			classTable.addChild(methodTable);
+			classTable.insert(methodSymbol);
 		}
-		return staticClassTable;
+		return classTable;
 	}
 
 	private SymbolType createSymbolType(Method method) {
@@ -118,42 +121,73 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	}
 
 	@Override
-	public Object visit(VirtualMethod method) {
+	public MethodSymbolTable visit(VirtualMethod method) {
 		return buildMethodSymbolTable(method);
 	}
 
-	private Object buildMethodSymbolTable(Method method) {
-		MethodSymbolTable table = new MethodSymbolTable();
+	private MethodSymbolTable buildMethodSymbolTable(Method method) {
+		MethodSymbolTable table = new MethodSymbolTable(method.getName());
 		for (Formal formal : method.getFormals()) {
-			Symbol symbol = new Symbol(formal.getName(),
-					SymbolKind.LOCAL_VARIABLE,
+			Symbol symbol = new Symbol(formal.getName(), SymbolKind.PARAMETER,
 					createSymbolType(formal.getType()));
 			table.insert(symbol);
 		}
 		getSymbolsAndChildTablesFromStatementList(table, method.getStatements());
+		setParentNamesForChildren(table);
 		return table;
+	}
+
+	private void setParentNamesForChildren(SymbolTable table) {
+		for (SymbolTable child : table.children) {
+			StatementBlockSymbolTable blockChild = (StatementBlockSymbolTable) child;
+			blockChild.setParentName(table.name);
+			setParentNamesForChildren(child);
+		}
+	}
+
+	static Logger logger = Logger.getLogger(SymbolTableBuilderVisitor.class
+			.getName());
+
+	class SymbolOrTables {
+		Symbol symbol;
+		List<StatementBlockSymbolTable> tables = new ArrayList<StatementBlockSymbolTable>();
+
+		public void addTo(SymbolTable symbolTable) {
+			if (symbol != null) {
+				symbolTable.insert(symbol);
+			}
+			for (StatementBlockSymbolTable table : tables) {
+				symbolTable.addChild(table);
+			}
+		}
+
+		public void addTableFrom(SymbolOrTables fromOperation) {
+			if (fromOperation != null && fromOperation.tables.size() > 0) {
+				tables.add(fromOperation.tables.get(0));
+			}
+		}
 	}
 
 	private void getSymbolsAndChildTablesFromStatementList(SymbolTable table,
 			List<Statement> statements) {
 		for (Statement statement : statements) {
-			SymbolTable fromStatement = (SymbolTable) statement.accept(this);
-			for (Symbol symbol : fromStatement.symbols.values()) {
-				table.insert(symbol);
+			SymbolOrTables fromStatement = (SymbolOrTables) statement
+					.accept(this);
+			logger.info("Statement: " + statement.getClass().getName());
+			if (fromStatement == null) {
+				continue;
 			}
-			for (SymbolTable childTable : fromStatement.children) {
-				table.addChild(childTable);
-			}
+			fromStatement.addTo(table);
 		}
 	}
 
 	@Override
-	public Object visit(StaticMethod method) {
+	public MethodSymbolTable visit(StaticMethod method) {
 		return buildMethodSymbolTable(method);
 	}
 
 	@Override
-	public Object visit(LibraryMethod method) {
+	public MethodSymbolTable visit(LibraryMethod method) {
 		return buildMethodSymbolTable(method);
 	}
 
@@ -194,15 +228,22 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	}
 
 	@Override
-	public Object visit(If ifStatement) {
-		// TODO Auto-generated method stub
-		return null;
+	public SymbolOrTables visit(If ifStatement) {
+		SymbolOrTables result = new SymbolOrTables();
+		SymbolOrTables fromOperation = (SymbolOrTables) ifStatement
+				.getOperation().accept(this);
+		result.addTableFrom(fromOperation);
+		if (ifStatement.hasElse()) {
+			SymbolOrTables fromElseOperation = (SymbolOrTables) ifStatement
+					.getElseOperation().accept(this);
+			result.addTableFrom(fromElseOperation);
+		}
+		return result;
 	}
 
 	@Override
-	public Object visit(While whileStatement) {
-		// TODO Auto-generated method stub
-		return null;
+	public SymbolOrTables visit(While whileStatement) {
+		return (SymbolOrTables) whileStatement.getOperation().accept(this);
 	}
 
 	@Override
@@ -218,23 +259,22 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	}
 
 	@Override
-	public Object visit(StatementsBlock statementsBlock) {
-		SymbolTable table = new StatementBlockSymbolTable();
-		getSymbolsAndChildTablesFromStatementList(table,
+	public SymbolOrTables visit(StatementsBlock statementsBlock) {
+		SymbolOrTables result = new SymbolOrTables();
+		StatementBlockSymbolTable blockTable = new StatementBlockSymbolTable();
+		getSymbolsAndChildTablesFromStatementList(blockTable,
 				statementsBlock.getStatements());
-		return table;
+		result.tables.add(blockTable);
+		return result;
 	}
 
 	@Override
-	public Object visit(LocalVariable localVariable) {
-		// Create a temporary anonymous SymbolTable implementation just for
-		// transferring the symbols to the caller.
-		SymbolTable table = new SymbolTable() {
-		};
-		table.insert(new Symbol(localVariable.getName(),
-				SymbolKind.LOCAL_VARIABLE, createSymbolType(localVariable
-						.getType())));
-		return table;
+	public SymbolOrTables visit(LocalVariable localVariable) {
+		SymbolOrTables result = new SymbolOrTables();
+		result.symbol = new Symbol(localVariable.getName(),
+				SymbolKind.LOCAL_VARIABLE,
+				createSymbolType(localVariable.getType()));
+		return result;
 	}
 
 	@Override
