@@ -1,6 +1,7 @@
 package IC.Symbols;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import IC.AST.ArrayLocation;
@@ -27,6 +28,7 @@ import IC.AST.NewClass;
 import IC.AST.PrimitiveType;
 import IC.AST.Program;
 import IC.AST.Return;
+import IC.AST.Statement;
 import IC.AST.StatementsBlock;
 import IC.AST.StaticCall;
 import IC.AST.StaticMethod;
@@ -52,17 +54,17 @@ public class SymbolTableBuilderVisitor implements Visitor {
 					new ClassSymbolType(clazz.getName()));
 			globalTable.insert(classSymbol);
 
-			StaticClassSymbolTable st = (StaticClassSymbolTable) clazz
+			StaticClassSymbolTable classTable = (StaticClassSymbolTable) clazz
 					.accept(this);
-			symbolTableForClass.put(clazz.getName(), st);
+			symbolTableForClass.put(clazz.getName(), classTable);
 		}
 
 		for (ICClass clazz : program.getClasses()) {
-			StaticClassSymbolTable st = symbolTableForClass
-					.get(clazz.getName());
+			StaticClassSymbolTable classTable = symbolTableForClass.get(clazz
+					.getName());
 			SymbolTable parentSymbolTable = clazz.hasSuperClass() ? symbolTableForClass
 					.get(clazz.getSuperClassName()) : globalTable;
-			parentSymbolTable.addChild(st);
+			parentSymbolTable.addChild(classTable);
 		}
 
 		return globalTable;
@@ -80,49 +82,79 @@ public class SymbolTableBuilderVisitor implements Visitor {
 
 		for (Method method : icClass.getMethods()) {
 			Symbol methodSymbol;
+			SymbolTable parentSymbolTable;
 			if (method instanceof VirtualMethod) {
 				methodSymbol = new Symbol(method.getName(),
 						SymbolKind.VIRTUAL_METHOD, createSymbolType(method));
-			} else if (method instanceof StaticMethod
-					|| method instanceof LibraryMethod) {
-
+				parentSymbolTable = instanceClassTable;
+			} else { // method is a StaticMethod or a LibraryMethod)
+				methodSymbol = new Symbol(method.getName(),
+						SymbolKind.STATIC_METHOD, createSymbolType(method));
+				parentSymbolTable = staticClassTable;
 			}
+			MethodSymbolTable methodTable = (MethodSymbolTable) method
+					.accept(this);
+			parentSymbolTable.addChild(methodTable);
+			parentSymbolTable.insert(methodSymbol);
 		}
 		return staticClassTable;
 	}
 
 	private SymbolType createSymbolType(Method method) {
-		// TODO Auto-generated method stub
-		return null;
+		return new MethodSymbolType(method);
 	}
 
 	private SymbolType createSymbolType(Type type) {
-		// TODO Auto-generated method stub
-		return null;
+		if (type instanceof PrimitiveType) {
+			return new PrimitiveSymbolType((PrimitiveType) type);
+		} else {
+			return new ClassSymbolType(type.getName());
+		}
 	}
 
 	@Override
 	public Object visit(Field field) {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Object visit(VirtualMethod method) {
-		// TODO Auto-generated method stub
-		return null;
+		return buildMethodSymbolTable(method);
+	}
+
+	private Object buildMethodSymbolTable(Method method) {
+		MethodSymbolTable table = new MethodSymbolTable();
+		for (Formal formal : method.getFormals()) {
+			Symbol symbol = new Symbol(formal.getName(),
+					SymbolKind.LOCAL_VARIABLE,
+					createSymbolType(formal.getType()));
+			table.insert(symbol);
+		}
+		getSymbolsAndChildTablesFromStatementList(table, method.getStatements());
+		return table;
+	}
+
+	private void getSymbolsAndChildTablesFromStatementList(SymbolTable table,
+			List<Statement> statements) {
+		for (Statement statement : statements) {
+			SymbolTable fromStatement = (SymbolTable) statement.accept(this);
+			for (Symbol symbol : fromStatement.symbols.values()) {
+				table.insert(symbol);
+			}
+			for (SymbolTable childTable : fromStatement.children) {
+				table.addChild(childTable);
+			}
+		}
 	}
 
 	@Override
 	public Object visit(StaticMethod method) {
-		// TODO Auto-generated method stub
-		return null;
+		return buildMethodSymbolTable(method);
 	}
 
 	@Override
 	public Object visit(LibraryMethod method) {
-		// TODO Auto-generated method stub
-		return null;
+		return buildMethodSymbolTable(method);
 	}
 
 	@Override
@@ -187,14 +219,22 @@ public class SymbolTableBuilderVisitor implements Visitor {
 
 	@Override
 	public Object visit(StatementsBlock statementsBlock) {
-		// TODO Auto-generated method stub
-		return null;
+		SymbolTable table = new StatementBlockSymbolTable();
+		getSymbolsAndChildTablesFromStatementList(table,
+				statementsBlock.getStatements());
+		return table;
 	}
 
 	@Override
 	public Object visit(LocalVariable localVariable) {
-		// TODO Auto-generated method stub
-		return null;
+		// Create a temporary anonymous SymbolTable implementation just for
+		// transferring the symbols to the caller.
+		SymbolTable table = new SymbolTable() {
+		};
+		table.insert(new Symbol(localVariable.getName(),
+				SymbolKind.LOCAL_VARIABLE, createSymbolType(localVariable
+						.getType())));
+		return table;
 	}
 
 	@Override
