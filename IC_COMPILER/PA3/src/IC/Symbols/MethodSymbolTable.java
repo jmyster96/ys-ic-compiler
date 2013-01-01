@@ -2,8 +2,8 @@ package IC.Symbols;
 
 public class MethodSymbolTable extends SymbolTable {
 
-	public MethodSymbolTable(String name) {
-		super(name);
+	public MethodSymbolTable(String name, SymbolTypeTable typeTable) {
+		super(name, typeTable);
 	}
 
 	@Override

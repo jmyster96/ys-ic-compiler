@@ -2,8 +2,8 @@ package IC.Symbols;
 
 public class GlobalSymbolTable extends SymbolTable {
 
-	public GlobalSymbolTable(String name) {
-		super(name);
+	public GlobalSymbolTable(String name, SymbolTypeTable typeTable) {
+		super(name, typeTable);
 	}
 
 	@Override
@@ -11,4 +11,9 @@ public class GlobalSymbolTable extends SymbolTable {
 		return "Global Symbol Table";
 	}
 
+	@Override
+	public String toString() {
+		// TODO Auto-generated method stub
+		return super.toString() + "\n" + typeTable.toString();
+	}
 }

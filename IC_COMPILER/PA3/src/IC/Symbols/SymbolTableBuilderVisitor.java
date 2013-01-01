@@ -46,20 +46,23 @@ import IC.AST.While;
 public class SymbolTableBuilderVisitor implements Visitor {
 
 	private String programName;
+	private SymbolTypeTable typeTable;
 
 	public SymbolTableBuilderVisitor(String programName) {
 		this.programName = programName;
+		this.typeTable = new SymbolTypeTable(programName);
 	}
 
 	@Override
 	public GlobalSymbolTable visit(Program program) {
-		GlobalSymbolTable globalTable = new GlobalSymbolTable(programName);
+		GlobalSymbolTable globalTable = new GlobalSymbolTable(programName,
+				typeTable);
 
 		Map<String, ClassSymbolTable> symbolTableForClass = new HashMap<String, ClassSymbolTable>();
 
 		for (ICClass clazz : program.getClasses()) {
 			Symbol classSymbol = new Symbol(clazz.getName(), SymbolKind.CLASS,
-					new ClassSymbolType(clazz.getName()));
+					typeTable.getSymbolTypeId(clazz));
 			globalTable.insert(classSymbol);
 
 			ClassSymbolTable classTable = (ClassSymbolTable) clazz.accept(this);
@@ -79,10 +82,11 @@ public class SymbolTableBuilderVisitor implements Visitor {
 
 	@Override
 	public ClassSymbolTable visit(ICClass icClass) {
-		ClassSymbolTable classTable = new ClassSymbolTable(icClass.getName());
+		ClassSymbolTable classTable = new ClassSymbolTable(icClass.getName(),
+				typeTable);
 		for (Field field : icClass.getFields()) {
 			Symbol fieldSymbol = new Symbol(field.getName(), SymbolKind.FIELD,
-					createSymbolType(field.getType()));
+					typeTable.getSymbolTypeId(field.getType()));
 			classTable.insert(fieldSymbol);
 		}
 
@@ -90,10 +94,12 @@ public class SymbolTableBuilderVisitor implements Visitor {
 			Symbol methodSymbol;
 			if (method instanceof VirtualMethod) {
 				methodSymbol = new Symbol(method.getName(),
-						SymbolKind.VIRTUAL_METHOD, createSymbolType(method));
+						SymbolKind.VIRTUAL_METHOD,
+						typeTable.getSymbolTypeId(method));
 			} else { // method is a StaticMethod or a LibraryMethod)
 				methodSymbol = new Symbol(method.getName(),
-						SymbolKind.STATIC_METHOD, createSymbolType(method));
+						SymbolKind.STATIC_METHOD,
+						typeTable.getSymbolTypeId(method));
 			}
 			MethodSymbolTable methodTable = (MethodSymbolTable) method
 					.accept(this);
@@ -101,18 +107,6 @@ public class SymbolTableBuilderVisitor implements Visitor {
 			classTable.insert(methodSymbol);
 		}
 		return classTable;
-	}
-
-	private SymbolType createSymbolType(Method method) {
-		return new MethodSymbolType(method);
-	}
-
-	private SymbolType createSymbolType(Type type) {
-		if (type instanceof PrimitiveType) {
-			return new PrimitiveSymbolType((PrimitiveType) type);
-		} else {
-			return new ClassSymbolType(type.getName());
-		}
 	}
 
 	@Override
@@ -126,10 +120,11 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	}
 
 	private MethodSymbolTable buildMethodSymbolTable(Method method) {
-		MethodSymbolTable table = new MethodSymbolTable(method.getName());
+		MethodSymbolTable table = new MethodSymbolTable(method.getName(),
+				typeTable);
 		for (Formal formal : method.getFormals()) {
 			Symbol symbol = new Symbol(formal.getName(), SymbolKind.PARAMETER,
-					createSymbolType(formal.getType()));
+					typeTable.getSymbolTypeId(formal.getType()));
 			table.insert(symbol);
 		}
 		getSymbolsAndChildTablesFromStatementList(table, method.getStatements());
@@ -261,7 +256,8 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	@Override
 	public SymbolOrTables visit(StatementsBlock statementsBlock) {
 		SymbolOrTables result = new SymbolOrTables();
-		StatementBlockSymbolTable blockTable = new StatementBlockSymbolTable();
+		StatementBlockSymbolTable blockTable = new StatementBlockSymbolTable(
+				typeTable);
 		getSymbolsAndChildTablesFromStatementList(blockTable,
 				statementsBlock.getStatements());
 		result.tables.add(blockTable);
@@ -273,7 +269,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 		SymbolOrTables result = new SymbolOrTables();
 		result.symbol = new Symbol(localVariable.getName(),
 				SymbolKind.LOCAL_VARIABLE,
-				createSymbolType(localVariable.getType()));
+				typeTable.getSymbolTypeId(localVariable.getType()));
 		return result;
 	}
 

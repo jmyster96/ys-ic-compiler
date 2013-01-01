@@ -6,16 +6,53 @@ import java.util.List;
 import IC.AST.Formal;
 import IC.AST.Method;
 import IC.AST.Type;
+import IC.Parser.CourtesyErrorReporter;
 
 public class MethodSymbolType extends SymbolType {
-	List<Type> formalTypes = new ArrayList<Type>();
-	Type returnType;
+	List<SymbolType> formalsTypes = new ArrayList<SymbolType>();
+	SymbolType returnType;
 
-	public MethodSymbolType(Method method) {
-		for (Formal formal : method.getFormals()) {
-			formalTypes.add(formal.getType());
+	public MethodSymbolType(List<SymbolType> formalsTypes, SymbolType returnType) {
+		this.formalsTypes = formalsTypes;
+		this.returnType = returnType;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("{");
+		List<String> formalsTypeNames = new ArrayList<String>();
+		for (SymbolType typeName : formalsTypes) {
+			formalsTypeNames.add(typeName.toString());
 		}
-		returnType = method.getType();
+		builder.append(CourtesyErrorReporter.joinStrings(formalsTypeNames));
+		builder.append(" -> ");
+		builder.append(returnType);
+		builder.append("}");
+		return builder.toString();
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof MethodSymbolType)) {
+			return false;
+		}
+		MethodSymbolType other = (MethodSymbolType) obj;
+		return other.returnType.equals(this.returnType)
+				&& listsEqual(other.formalsTypes, this.formalsTypes);
+	}
+
+	private boolean listsEqual(List<?> list1,
+			List<?> list2) {
+		if (list1.size() != list2.size()) {
+			return false;
+		}
+		for (int i = 0; i < list1.size(); ++i) {
+			if (!list1.get(i).equals(list2.get(i))) {
+				return false;
+			}
+		}
+		return true;
 	}
 
 }

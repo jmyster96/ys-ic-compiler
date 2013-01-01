@@ -13,9 +13,11 @@ public abstract class SymbolTable {
 	List<SymbolTable> children = new ArrayList<SymbolTable>();
 	String name;
 	Map<String, Symbol> symbols = new HashMap<String, Symbol>();
+	SymbolTypeTable typeTable;
 
-	public SymbolTable(String name) {
+	public SymbolTable(String name, SymbolTypeTable typeTable) {
 		this.name = name;
+		this.typeTable = typeTable;
 	}
 
 	void insert(Symbol newSymbol) {
@@ -54,11 +56,14 @@ public abstract class SymbolTable {
 			builder.append(tableEntry.getValue().kind);
 			builder.append(": ");
 			builder.append(tableEntry.getKey());
+			builder.append(": ");
+			builder.append(this.typeTable.getSymbolById(tableEntry.getValue().symbolTypeIndex));
 			builder.append("\n");
 		}
 		if (children.size() > 0) {
 			builder.append("Children tables: ");
-			builder.append(CourtesyErrorReporter.joinStrings(getChildrenNames()));
+			builder.append(CourtesyErrorReporter
+					.joinStrings(getChildrenNames()));
 			builder.append("\n");
 
 			builder.append("\n");

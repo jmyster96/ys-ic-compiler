@@ -5,11 +5,11 @@ public class Symbol {
 	// Field, Method, Local Variable, Etc
 	SymbolKind kind;
 	// int, string, etc
-	SymbolType type;
+	int symbolTypeIndex;
 
-	public Symbol(String name, SymbolKind kind, SymbolType type) {
+	public Symbol(String name, SymbolKind kind, int symbolTypeIndex) {
 		this.name = name;
 		this.kind = kind;
-		this.type = type;
+		this.symbolTypeIndex = symbolTypeIndex;
 	}
 }

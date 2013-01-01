@@ -39,6 +39,7 @@ public class Compiler {
 				printAST(options, libraryClass, root);
 			}
 
+			root.getClasses().add(0, libraryClass);
 			SymbolTableBuilderVisitor symTabBuilder = new SymbolTableBuilderVisitor(
 					new File(options.sourcePath).getName());
 			GlobalSymbolTable symbolTable = symTabBuilder.visit(root);
