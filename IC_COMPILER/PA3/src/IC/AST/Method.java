@@ -59,7 +59,7 @@ public abstract class Method extends ASTNode {
 	
 	MethodSymbolTable symbolTable;
 
-	public MethodSymbolTable getGlobalSymbolTable() {
+	public MethodSymbolTable getMethodSymbolTable() {
 		return symbolTable;
 	}
 
