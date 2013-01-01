@@ -20,14 +20,14 @@ public abstract class SymbolTable {
 		this.typeTable = typeTable;
 	}
 
-	void insert(Symbol newSymbol) {
+	public void insert(Symbol newSymbol) {
 		if (symbols.containsKey(newSymbol.name)) {
 			// TODO: error
 		}
 		symbols.put(newSymbol.name, newSymbol);
 	}
 
-	Symbol lookup(String name) {
+	public Symbol lookup(String name) {
 		if (symbols.containsKey(name)) {
 			return symbols.get(name);
 		}
