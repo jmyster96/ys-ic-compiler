@@ -36,7 +36,7 @@ public class StatementsBlock extends Statement {
 
 	StatementBlockSymbolTable symbolTable;
 
-	public StatementBlockSymbolTable getGlobalSymbolTable() {
+	public StatementBlockSymbolTable getStatementsBlockSymbolTable() {
 		return symbolTable;
 	}
 
