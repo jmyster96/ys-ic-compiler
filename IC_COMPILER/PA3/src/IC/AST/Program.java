@@ -2,6 +2,8 @@ package IC.AST;
 
 import java.util.List;
 
+import IC.Symbols.GlobalSymbolTable;
+
 /**
  * Root AST node for an IC program.
  * 
@@ -30,4 +32,14 @@ public class Program extends ASTNode {
 		return classes;
 	}
 
+
+	GlobalSymbolTable symbolTable;
+
+	public GlobalSymbolTable getGlobalSymbolTable() {
+		return symbolTable;
+	}
+
+	public void setGlobalSymbolTable(GlobalSymbolTable symbolTable) {
+		this.symbolTable = symbolTable;
+	}
 }

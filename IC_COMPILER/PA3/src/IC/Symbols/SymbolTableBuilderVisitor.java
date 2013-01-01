@@ -57,6 +57,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	public GlobalSymbolTable visit(Program program) {
 		GlobalSymbolTable globalTable = new GlobalSymbolTable(programName,
 				typeTable);
+		program.setGlobalSymbolTable(globalTable);
 
 		Map<String, ClassSymbolTable> symbolTableForClass = new HashMap<String, ClassSymbolTable>();
 
@@ -84,6 +85,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	public ClassSymbolTable visit(ICClass icClass) {
 		ClassSymbolTable classTable = new ClassSymbolTable(icClass.getName(),
 				typeTable);
+		icClass.setClassSymbolTable(classTable);
 		for (Field field : icClass.getFields()) {
 			Symbol fieldSymbol = new Symbol(field.getName(), SymbolKind.FIELD,
 					typeTable.getSymbolTypeId(field.getType()));
@@ -122,6 +124,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	private MethodSymbolTable buildMethodSymbolTable(Method method) {
 		MethodSymbolTable table = new MethodSymbolTable(method.getName(),
 				typeTable);
+		method.setMethodSymbolTable(table);
 		for (Formal formal : method.getFormals()) {
 			Symbol symbol = new Symbol(formal.getName(), SymbolKind.PARAMETER,
 					typeTable.getSymbolTypeId(formal.getType()));
@@ -168,7 +171,6 @@ public class SymbolTableBuilderVisitor implements Visitor {
 		for (Statement statement : statements) {
 			SymbolOrTables fromStatement = (SymbolOrTables) statement
 					.accept(this);
-			logger.info("Statement: " + statement.getClass().getName());
 			if (fromStatement == null) {
 				continue;
 			}
@@ -258,6 +260,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 		SymbolOrTables result = new SymbolOrTables();
 		StatementBlockSymbolTable blockTable = new StatementBlockSymbolTable(
 				typeTable);
+		statementsBlock.setBlockSymbolTable(blockTable);
 		getSymbolsAndChildTablesFromStatementList(blockTable,
 				statementsBlock.getStatements());
 		result.tables.add(blockTable);

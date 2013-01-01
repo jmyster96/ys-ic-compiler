@@ -137,9 +137,6 @@ non terminal List<Expression> arg_list;
 //////////////////////////
 // Precedence declarations
 
-precedence left DOT;
-
-
 precedence left ASSIGN;
 precedence left LOR;
 precedence left LAND;
@@ -149,6 +146,8 @@ precedence left PLUS, MINUS;
 precedence left MULTIPLY, DIVIDE, MOD;
 precedence right UMINUS, LNEG;
 precedence left LB, RB, LP, RP;
+precedence left DOT;
+
 
 // Fix the dangling else problem
 precedence right ELSE;

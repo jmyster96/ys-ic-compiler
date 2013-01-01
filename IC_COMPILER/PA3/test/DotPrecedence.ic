@@ -1,0 +1,5 @@
+class Test {
+  void foo() {
+    Library.print(this.getA().getB().getC().getX());
+  }
+}

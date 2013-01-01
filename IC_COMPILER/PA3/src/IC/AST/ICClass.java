@@ -2,6 +2,8 @@ package IC.AST;
 
 import java.util.List;
 
+import IC.Symbols.ClassSymbolTable;
+
 /**
  * Class declaration AST node.
  * 
@@ -81,4 +83,13 @@ public class ICClass extends ASTNode {
 		return methods;
 	}
 
+	ClassSymbolTable symbolTable;
+
+	public ClassSymbolTable getGlobalSymbolTable() {
+		return symbolTable;
+	}
+
+	public void setClassSymbolTable(ClassSymbolTable symbolTable) {
+		this.symbolTable = symbolTable;
+	}
 }

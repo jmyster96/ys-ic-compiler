@@ -2,6 +2,8 @@ package IC.AST;
 
 import java.util.List;
 
+import IC.Symbols.StatementBlockSymbolTable;
+
 /**
  * Statements block AST node.
  * 
@@ -30,6 +32,16 @@ public class StatementsBlock extends Statement {
 
 	public List<Statement> getStatements() {
 		return statements;
+	}
+
+	StatementBlockSymbolTable symbolTable;
+
+	public StatementBlockSymbolTable getGlobalSymbolTable() {
+		return symbolTable;
+	}
+
+	public void setBlockSymbolTable(StatementBlockSymbolTable symbolTable) {
+		this.symbolTable = symbolTable;
 	}
 
 }

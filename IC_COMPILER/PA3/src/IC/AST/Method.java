@@ -2,6 +2,8 @@ package IC.AST;
 
 import java.util.List;
 
+import IC.Symbols.MethodSymbolTable;
+
 /**
  * Abstract base class for method AST nodes.
  * 
@@ -53,4 +55,16 @@ public abstract class Method extends ASTNode {
 	public List<Statement> getStatements() {
 		return statements;
 	}
+	
+	
+	MethodSymbolTable symbolTable;
+
+	public MethodSymbolTable getGlobalSymbolTable() {
+		return symbolTable;
+	}
+
+	public void setMethodSymbolTable(MethodSymbolTable symbolTable) {
+		this.symbolTable = symbolTable;
+	}
+
 }
