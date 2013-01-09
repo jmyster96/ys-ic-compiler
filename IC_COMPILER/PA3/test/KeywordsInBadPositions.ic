@@ -1,0 +1,28 @@
+class A {
+  void breakNotInWhile() {
+    break;
+  }
+  int continueNotInWhile() {
+    continue;
+    return 4;
+  }
+  A thisInVirtualMethod() {
+    return this;
+  }
+  void breakAndContinueInWhile() {
+    int i = 0;
+    while (true) {
+      if (i == 0) {
+        i = i + 1;
+        continue;
+      }
+      break;
+    }
+  }
+  static A thisInStaticMethod() {
+    return this;
+  }
+  static void main(string[] args) {
+    // Nothing.
+  }
+}

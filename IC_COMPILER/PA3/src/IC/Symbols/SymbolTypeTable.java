@@ -1,7 +1,11 @@
 package IC.Symbols;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
 
 import sun.util.logging.resources.logging;
@@ -12,17 +16,27 @@ import IC.AST.Method;
 import IC.AST.PrimitiveType;
 import IC.AST.Type;
 import IC.AST.UserType;
+import IC.Semantic.SemanticError;
+import IC.Symbols.PrimitiveSymbolType.PrimitiveSymbolTypes;
 
 import java_cup.symbol;
 
 public class SymbolTypeTable {
 	String programName;
 	List<SymbolType> symbolTypes = new ArrayList<SymbolType>();
-	private static Logger logger = Logger
-			.getLogger(SymbolTypeTable.class.getName());
+	Map<SymbolType, Integer> symbolTypesIds = new HashMap<SymbolType, Integer>();
+	private static Logger logger = Logger.getLogger(SymbolTypeTable.class
+			.getName());
 
 	public SymbolTypeTable(String programName) {
 		this.programName = programName;
+		addPrimitiveTypes();
+	}
+
+	private void addPrimitiveTypes() {
+		for (PrimitiveSymbolTypes type : PrimitiveSymbolTypes.values()) {
+			addOrGetSymbolType(new PrimitiveSymbolType(type));
+		}
 	}
 
 	public SymbolType getSymbolById(int id) {
@@ -46,10 +60,11 @@ public class SymbolTypeTable {
 	}
 
 	private int addOrGetSymbolTypeId(SymbolType symbolType) {
-		if (symbolTypes.indexOf(symbolType) >= 0) {
-			return symbolTypes.indexOf(symbolType) + 1;
+		if (symbolTypesIds.containsKey(symbolType)) {
+			return symbolTypesIds.get(symbolType);
 		}
 		symbolTypes.add(symbolType);
+		symbolTypesIds.put(symbolType, symbolTypes.size());
 		return symbolTypes.size();
 	}
 
@@ -63,19 +78,24 @@ public class SymbolTypeTable {
 	}
 
 	private SymbolType createSymbolType(Type type) {
+		SymbolType basicType = addOrGetSymbolType(astTypeToSymbolType(type));
+		return createSymbolType(basicType, type.getDimension());
+	}
+
+	private SymbolType createSymbolType(SymbolType basicType, int dimension) {
+		if (dimension > 0) {
+			return addOrGetSymbolType(new ArraySymbolType(createSymbolType(
+					basicType, dimension - 1)));
+		}
+		return addOrGetSymbolType(basicType);
+	}
+
+	private SymbolType astTypeToSymbolType(Type type) {
 		SymbolType basicType;
 		if (type instanceof PrimitiveType) {
 			basicType = new PrimitiveSymbolType((PrimitiveType) type);
 		} else {
 			basicType = new ClassSymbolType(type.getName());
-		}
-		return wrapInArrayIfNeeded(type, basicType);
-	}
-
-	private SymbolType wrapInArrayIfNeeded(Type type, SymbolType basicType) {
-		if (type.getDimension() > 0) {
-			return new ArraySymbolType(addOrGetSymbolType(basicType),
-					type.getDimension());
 		}
 		return basicType;
 	}
@@ -90,10 +110,18 @@ public class SymbolTypeTable {
 		sb.append("Type Table: ");
 		sb.append(programName);
 		sb.append("\n");
-		int id = 1;
-		for (SymbolType type : symbolTypes) {
-			sb.append(id++);
+		List<SymbolType> sorted = new ArrayList<SymbolType>(symbolTypes);
+		Collections.sort(sorted, new Comparator<SymbolType>() {
+			@Override
+			public int compare(SymbolType o1, SymbolType o2) {
+				return o1.getDisplaySortIndex() - o2.getDisplaySortIndex();
+			}
+		});
+		for (SymbolType type : sorted) {
+			sb.append(addOrGetSymbolTypeId(type));
 			sb.append(". ");
+			sb.append(type.getHeader());
+			sb.append(": ");
 			sb.append(type);
 			sb.append("\n");
 		}

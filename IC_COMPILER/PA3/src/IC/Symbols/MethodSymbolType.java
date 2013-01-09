@@ -29,16 +29,7 @@ public class MethodSymbolType extends SymbolType {
 		return builder.toString();
 	}
 
-	public boolean equals(Object obj) {
-		if (!(obj instanceof MethodSymbolType)) {
-			return false;
-		}
-		MethodSymbolType other = (MethodSymbolType) obj;
-		return other.returnType.equals(this.returnType)
-				&& listsEqual(other.formalsTypes, this.formalsTypes);
-	}
-
-	private boolean listsEqual(List<?> list1, List<?> list2) {
+	private static boolean listsEqual(List<?> list1, List<?> list2) {
 		if (list1.size() != list2.size()) {
 			return false;
 		}
@@ -49,5 +40,37 @@ public class MethodSymbolType extends SymbolType {
 		}
 		return true;
 	}
+
+	@Override
+	public String getHeader() {
+		return "Method type";
+	}
+
+	@Override
+	public int getDisplaySortIndex() {
+		return 4;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (!(obj instanceof MethodSymbolType)) {
+			return false;
+		}
+		MethodSymbolType other = (MethodSymbolType) obj;
+		return other.returnType.equals(this.returnType)
+				&& listsEqual(other.formalsTypes, this.formalsTypes);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + returnType.hashCode();
+		for (SymbolType formalType : formalsTypes) {
+			result = prime * result + formalType.hashCode();
+		}
+		return result;
+	}
+
 
 }

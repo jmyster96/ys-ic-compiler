@@ -7,7 +7,7 @@ public class StatementBlockSymbolTable extends SymbolTable {
 	};
 
 	public void setParentName(String parentName) {
-		this.name = "statement block in " + parentName;
+		this.setName("statement block in " + parentName);
 	}
 
 	@Override

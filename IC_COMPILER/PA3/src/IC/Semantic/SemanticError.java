@@ -1,33 +1,27 @@
 package IC.Semantic;
 
-public class SemanticError extends Exception {
-	private int line;
-	private String value;
+import IC.ICCompilerError;
 
+public class SemanticError extends ICCompilerError {
 	public SemanticError(String message) {
 		super(message);
 	}
 
 	public SemanticError(String message, int line) {
-		super(message);
+		super(message, line);
 		this.line = line;
 	}
 
 	public SemanticError(String message, int line, String value) {
-		super(message);
-		this.line = line;
-		this.value = value;
+		super(message, line, value);
 	}
 
 	public String toString() {
-	  String msg = "Line " + this.line + ": Syntax error: " + this.getMessage();
-	  if (value != null) {
-	    msg += "; " + value;
-	  }
+		String msg = "semantic error at line " + this.line + ": "
+				+ this.getMessage();
+		if (value != null) {
+			msg += "; " + value;
+		}
 		return msg;
-	}
-	
-	public int getLine() {
-	   return this.line;
 	}
 }

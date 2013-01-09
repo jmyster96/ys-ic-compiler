@@ -5,41 +5,61 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
+
+import sun.util.logging.resources.logging;
 
 import IC.Parser.CourtesyErrorReporter;
+import IC.Semantic.SemanticError;
 
 public abstract class SymbolTable {
-	SymbolTable parent;
-	List<SymbolTable> children = new ArrayList<SymbolTable>();
-	String name;
-	Map<String, Symbol> symbols = new HashMap<String, Symbol>();
-	SymbolTypeTable typeTable;
+	private SymbolTable parent;
+	private List<SymbolTable> children = new ArrayList<SymbolTable>();
+	private String name;
+	private Map<String, Symbol> symbols = new HashMap<String, Symbol>();
+
+	private SymbolTypeTable typeTable;
 
 	public SymbolTable(String name, SymbolTypeTable typeTable) {
 		this.name = name;
 		this.typeTable = typeTable;
 	}
 
-	public void insert(Symbol newSymbol) {
+	public void insert(Symbol newSymbol) throws SymbolTableException {
 		if (symbols.containsKey(newSymbol.name)) {
-			// TODO: error
+			throw new SymbolTableException(
+					"A symbol with this name already exists in this scope: "
+							+ newSymbol.name);
 		}
 		symbols.put(newSymbol.name, newSymbol);
 	}
 
-	public Symbol lookup(String name) {
+	public Symbol lookup(String name) throws SymbolTableException {
 		if (symbols.containsKey(name)) {
 			return symbols.get(name);
 		}
 		if (parent == null) {
-			// TODO: error
-			return null;
+			throw new SymbolTableException("Couldn't find a symbol with name: "
+					+ name);
 		}
 		return parent.lookup(name);
 	}
 
+	public SymbolTable lookupScope(String name) throws SymbolTableException {
+		for (SymbolTable child : children) {
+			if (child.name.equals(name)) {
+				return child;
+			}
+		}
+		if (parent == null) {
+			throw new SymbolTableException("Couldn't find a symbol with name: "
+					+ name);
+		}
+		return parent.lookupScope(name);
+	}
+
 	public void addChild(SymbolTable child) {
-		children.add(child);
+		getChildren().add(child);
 		child.parent = this;
 	}
 
@@ -48,7 +68,7 @@ public abstract class SymbolTable {
 		StringBuilder builder = new StringBuilder();
 		builder.append(this.getSymbolTableTypeString());
 		builder.append(": ");
-		builder.append(name);
+		builder.append(getName());
 		builder.append("\n");
 
 		for (Map.Entry<String, Symbol> tableEntry : symbols.entrySet()) {
@@ -57,17 +77,18 @@ public abstract class SymbolTable {
 			builder.append(": ");
 			builder.append(tableEntry.getKey());
 			builder.append(": ");
-			builder.append(this.typeTable.getSymbolById(tableEntry.getValue().symbolTypeIndex));
+			builder.append(this.getTypeTable().getSymbolById(
+					tableEntry.getValue().symbolTypeId));
 			builder.append("\n");
 		}
-		if (children.size() > 0) {
+		if (getChildren().size() > 0) {
 			builder.append("Children tables: ");
 			builder.append(CourtesyErrorReporter
 					.joinStrings(getChildrenNames()));
 			builder.append("\n");
 
 			builder.append("\n");
-			for (SymbolTable child : children) {
+			for (SymbolTable child : getChildren()) {
 				builder.append(child.toString());
 			}
 		} else {
@@ -78,13 +99,33 @@ public abstract class SymbolTable {
 
 	private Collection<?> getChildrenNames() {
 		Collection<String> names = new ArrayList<String>();
-		for (SymbolTable child : children) {
-			names.add(child.name);
+		for (SymbolTable child : getChildren()) {
+			names.add(child.getName());
 		}
 		return names;
 	}
 
 	protected String getSymbolTableTypeString() {
 		return "Symbol Table";
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	protected void setName(String name) {
+		this.name = name;
+	}
+
+	public List<SymbolTable> getChildren() {
+		return children;
+	}
+
+	public SymbolTypeTable getTypeTable() {
+		return typeTable;
+	}
+
+	public SymbolTable getParent() {
+		return parent;
 	}
 }

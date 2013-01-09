@@ -4,12 +4,16 @@ import IC.AST.ICClass;
 import IC.AST.PrettyPrinter;
 import IC.AST.Program;
 import IC.Parser.*;
+import IC.Semantic.BreakContinueAndThisValidator;
 import IC.Semantic.SemanticError;
+import IC.Semantic.SemanticScopeChecker;
+import IC.Semantic.SingleMainFunctionValidator;
 import IC.Symbols.GlobalSymbolTable;
 import IC.Symbols.SymbolTable;
 import IC.Symbols.SymbolTableBuilderVisitor;
 
 import java.io.*;
+
 import java_cup.runtime.Symbol;
 
 public class Compiler {
@@ -40,8 +44,13 @@ public class Compiler {
 				// (and the Library signature file) to System.out.
 				printAST(options, libraryClass, program);
 			}
-			
-			doSemanticChecks(options, libraryClass, program);
+
+			if (!doSemanticChecks(options, libraryClass, program,
+					options.sourcePath)) {
+				System.out.println();
+				System.out
+						.println("Semantic errors occurred, compilation terminated!");
+			}
 
 		} catch (IOException e) {
 			// We were asked to gracefully return 0 on errors.
@@ -50,40 +59,65 @@ public class Compiler {
 		}
 	}
 
-	private static void doSemanticChecks(Options options, ICClass libraryClass,
-			Program program) {
-		SymbolTable symbolTable;
-//			try {
-			// ///////////////////////////
-			// Semantic checks start here
+	private static boolean doSemanticChecks(Options options,
+			ICClass libraryClass, Program program, String filepath)
+			throws IOException {
+		// try {
+		// ///////////////////////////
+		// Semantic checks start here
+		boolean hadErrors = false;
+		// 1. Add the Library class as an actual class for simplicity.
+		program.getClasses().add(0, libraryClass);
 
-			// 1. Add the Library class as an actual class for simplicity.
-			program.getClasses().add(0, libraryClass);
+		// 2. Build the Symbol Table and Type Table.
+		SymbolTableBuilderVisitor symTabBuilder = new SymbolTableBuilderVisitor(
+				new File(options.sourcePath).getName());
+		GlobalSymbolTable symbolTable = symTabBuilder.visit(program);
+		for (SemanticError error : symTabBuilder.getErrors()) {
+			printError(filepath, error);
+			hadErrors = true;
+		}
 
-			// 2. Build the Symbol Table and Type Table.
-			SymbolTableBuilderVisitor symTabBuilder = new SymbolTableBuilderVisitor(
-					new File(options.sourcePath).getName());
-			symbolTable = symTabBuilder.visit(program);
+		//
+		// (1) scope rules (Section 10 in the IC specification);
 
-			//
-			// (1) scope rules (Section 10 in the IC specification);
-			// (2) type-checking rules (Section 15), including a check that
-			// the class hierarchy is a tree and checking
-			// correct overriding of instance methods in subclasses;
-			// (3) checking that the program contains a single main method
-			// with the correct signature;
-			// (4) that break and continue statements appear only inside
-			// loops;
-			// (5) that the this keyword is only used in instance methods;
-			// and
-			// (6) that the library class has the correct name (Library).
-//			} catch (SemanticError e) {
-//
-//			}
-		if (options.dumpSymTab) {
+		SemanticScopeChecker scopeChecker = new SemanticScopeChecker();
+		scopeChecker.visit(program);
+		for (SemanticError error : scopeChecker.getErrors()) {
+			printError(filepath, error);
+			hadErrors = true;
+		}
+
+		// (2) type-checking rules (Section 15), including a check that
+		// the class hierarchy is a tree and checking
+		// correct overriding of instance methods in subclasses;
+		// (3) checking that the program contains a single main method
+		// with the correct signature;
+		SingleMainFunctionValidator mainValidator = new SingleMainFunctionValidator();
+		SemanticError mainValidatorResult = (SemanticError) mainValidator
+				.visit(program);
+		if (mainValidatorResult != null) {
+			printError(filepath, mainValidatorResult);
+			hadErrors = true;
+		}
+		// (4) that break and continue statements appear only inside
+		// loops;
+		// (5) that the this keyword is only used in instance methods;
+		// and
+		BreakContinueAndThisValidator keywordValid = new BreakContinueAndThisValidator();
+		keywordValid.visit(program);
+		for (SemanticError error : keywordValid.getErrors()) {
+			printError(filepath, error);
+			hadErrors = true;
+		}
+		// (6) that the library class has the correct name (Library).
+		// This is done in the Syntax analysis.
+
+		if (!hadErrors && options.dumpSymTab) {
 			System.out.println();
 			System.out.println(symbolTable.toString());
 		}
+		return !hadErrors;
 	}
 
 	private static void printAST(Options options, ICClass libraryClass,
@@ -119,16 +153,12 @@ public class Compiler {
 			System.out.println("Parsed " + displayFilepath + " successfully!");
 			return parseSymbol;
 		} catch (LexicalError e) {
-			System.out.println("Lexical error while parsing " + displayFilepath
-					+ ".");
-			System.out.println(e);
-			printLine(filepath, e.getLine());
+			printError(filepath, e, "Lexical error while parsing "
+					+ displayFilepath + ".");
 			return null;
 		} catch (SyntaxError e) {
-			System.out.println("Syntax error while parsing " + displayFilepath
-					+ ".");
-			System.out.println(e);
-			printLine(filepath, e.getLine());
+			printError(filepath, e, "Syntax error while parsing "
+					+ displayFilepath + ".");
 			return null;
 		} catch (Exception e) {
 			// Not supposed to get here because our parser only throws
@@ -139,6 +169,20 @@ public class Compiler {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	private static void printError(String filepath, ICCompilerError e,
+			String message) throws IOException {
+		System.out.println(message);
+		System.out.println(e);
+		printLine(filepath, e.getLine());
+	}
+
+	private static void printError(String filepath, ICCompilerError e)
+			throws IOException {
+		System.out.println();
+		System.out.println(e);
+		printLine(filepath, e.getLine());
 	}
 
 	private static void printLine(String filepath, int line) throws IOException {
@@ -169,7 +213,7 @@ public class Compiler {
 		private static void handleWrongSyntax() {
 			System.out.println("Can't run compiler.");
 			System.out
-					.println("Usage:\n\tjava IC.Compiler <file.ic> [ -L</path/to/libic.sig> ] [ -print-ast ]");
+					.println("Usage:\n\tjava IC.Compiler <file.ic> [ -L</path/to/libic.sig> ] [ -print-ast ] [ -dump-symtab ]");
 			System.exit(1);
 		}
 
@@ -179,8 +223,7 @@ public class Compiler {
 				handleWrongSyntax();
 			}
 
-			for (int i = 0; i < args.length; ++i) {
-				String arg = args[i];
+			for (String arg : args) {
 				if (arg.startsWith("-L")) {
 					options.libicPath = arg.substring(2);
 				} else if (arg.equals("-print-ast")) {
@@ -194,7 +237,9 @@ public class Compiler {
 					handleWrongSyntax();
 				}
 			}
+
 			if (options.sourcePath == null) {
+				System.out.println("Source file isn't specified.");
 				handleWrongSyntax();
 			}
 			options.makeSureValid();

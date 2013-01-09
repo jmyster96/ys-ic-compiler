@@ -2,6 +2,7 @@ package IC.AST;
 
 import java.util.List;
 
+import IC.Semantic.SemanticError;
 import IC.Symbols.GlobalSymbolTable;
 
 /**
@@ -31,7 +32,6 @@ public class Program extends ASTNode {
 	public List<ICClass> getClasses() {
 		return classes;
 	}
-
 
 	GlobalSymbolTable symbolTable;
 

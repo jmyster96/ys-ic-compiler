@@ -14,6 +14,6 @@ public class GlobalSymbolTable extends SymbolTable {
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return super.toString() + "\n" + typeTable.toString();
+		return super.toString() + "\n" + getTypeTable().toString();
 	}
 }

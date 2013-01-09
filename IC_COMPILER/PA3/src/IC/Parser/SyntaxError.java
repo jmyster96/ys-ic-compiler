@@ -1,22 +1,18 @@
 package IC.Parser;
 
-public class SyntaxError extends Exception {
-	private int line;
-	private String value;
+import IC.ICCompilerError;
 
+public class SyntaxError extends ICCompilerError {
 	public SyntaxError(String message) {
 		super(message);
 	}
 
 	public SyntaxError(String message, int line) {
-		super(message);
-		this.line = line;
+		super(message, line);
 	}
 
 	public SyntaxError(String message, int line, String value) {
-		super(message);
-		this.line = line;
-		this.value = value;
+		super(message, line, value);
 	}
 
 	public String toString() {
@@ -25,9 +21,5 @@ public class SyntaxError extends Exception {
 	    msg += "; " + value;
 	  }
 		return msg;
-	}
-	
-	public int getLine() {
-	   return this.line;
 	}
 }

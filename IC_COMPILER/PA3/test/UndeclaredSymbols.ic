@@ -1,0 +1,39 @@
+class A {
+  int g;
+  int a(int b) {
+    b = 3;  // Should be ok
+    c = 5;  // Should be an ERROR
+    g = 6;  // Should be ok;
+    a(3);   // Should be ok
+    d(7);   // ERROR
+    A.a();      // Should be an ERROR: 'a' is not static
+    A.statE();  // Should be ok
+    statE();   // Should also be ok.
+    A.no();      // Should be an ERROR: 'no' is not a static method in A 
+    B.a();   // Should be an ERROR
+    
+    Static.yo();  // Should be ok
+    Static.ho();  // Should be ERROR: no 'ho' in Static
+    Static.go();  // Should be ERROR: 'go' isn't static
+    
+    return 7;
+  }
+  int h;
+  static int statE() {
+    A instance = new A();
+    instance.a(3);   // Should be ok.
+    a(3);   // Should be an ERROR
+    g = 3;  // Should be an error;
+    {
+      a(3);   // Should be an ERROR
+      h = 3;  // Should be an ERROR
+      i = 5;  // Should be an ERROR
+    }
+    return 3;
+  }
+}
+class Static {
+  static void yo() {}
+  void go() {}
+  static void main(string[] args) {}
+}

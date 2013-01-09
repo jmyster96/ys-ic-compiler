@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
+import IC.AST.ASTNode;
 import IC.AST.ArrayLocation;
 import IC.AST.Assignment;
 import IC.AST.Break;
@@ -42,17 +43,23 @@ import IC.AST.VirtualCall;
 import IC.AST.VirtualMethod;
 import IC.AST.Visitor;
 import IC.AST.While;
+import IC.Semantic.SemanticError;
 
 public class SymbolTableBuilderVisitor implements Visitor {
 
 	private String programName;
 	private SymbolTypeTable typeTable;
+	private List<SemanticError> errors = new ArrayList<SemanticError>();
 	private static Logger logger = Logger
 			.getLogger(SymbolTableBuilderVisitor.class.getName());
 
 	public SymbolTableBuilderVisitor(String programName) {
 		this.programName = programName;
 		this.typeTable = new SymbolTypeTable(programName);
+	}
+
+	public List<SemanticError> getErrors() {
+		return errors;
 	}
 
 	@Override
@@ -66,7 +73,8 @@ public class SymbolTableBuilderVisitor implements Visitor {
 		for (ICClass clazz : program.getClasses()) {
 			Symbol classSymbol = new Symbol(clazz.getName(), SymbolKind.CLASS,
 					typeTable.getSymbolTypeId(clazz));
-			globalTable.insert(classSymbol);
+
+			insertSymbolToTable(globalTable, clazz, classSymbol);
 
 			ClassSymbolTable classTable = (ClassSymbolTable) clazz.accept(this);
 			symbolTableForClass.put(clazz.getName(), classTable);
@@ -86,6 +94,16 @@ public class SymbolTableBuilderVisitor implements Visitor {
 		return globalTable;
 	}
 
+	private void insertSymbolToTable(SymbolTable table,
+			ASTNode declarationNode, Symbol newSymbol) {
+		try {
+			table.insert(newSymbol);
+		} catch (SymbolTableException e) {
+			errors.add(new SemanticError(e.getMessage(), declarationNode
+					.getLine(), newSymbol.name));
+		}
+	}
+
 	@Override
 	public ClassSymbolTable visit(ICClass icClass) {
 		ClassSymbolTable classTable = new ClassSymbolTable(icClass.getName(),
@@ -94,7 +112,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 		for (Field field : icClass.getFields()) {
 			Symbol fieldSymbol = new Symbol(field.getName(), SymbolKind.FIELD,
 					typeTable.getSymbolTypeId(field.getType()));
-			classTable.insert(fieldSymbol);
+			insertSymbolToTable(classTable, field, fieldSymbol);
 		}
 
 		for (Method method : icClass.getMethods()) {
@@ -111,7 +129,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 			MethodSymbolTable methodTable = (MethodSymbolTable) method
 					.accept(this);
 			classTable.addChild(methodTable);
-			classTable.insert(methodSymbol);
+			insertSymbolToTable(classTable, method, methodSymbol);
 		}
 		return classTable;
 	}
@@ -133,7 +151,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 		for (Formal formal : method.getFormals()) {
 			Symbol symbol = new Symbol(formal.getName(), SymbolKind.PARAMETER,
 					typeTable.getSymbolTypeId(formal.getType()));
-			table.insert(symbol);
+			insertSymbolToTable(table, formal, symbol);
 		}
 		getSymbolsAndChildTablesFromStatementList(table, method.getStatements());
 		setParentNamesForChildren(table);
@@ -141,20 +159,34 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	}
 
 	private void setParentNamesForChildren(SymbolTable table) {
-		for (SymbolTable child : table.children) {
+		for (SymbolTable child : table.getChildren()) {
 			StatementBlockSymbolTable blockChild = (StatementBlockSymbolTable) child;
-			blockChild.setParentName(table.name);
+			blockChild.setParentName(table.getName());
 			setParentNamesForChildren(child);
 		}
 	}
 
 	class SymbolOrTables {
 		Symbol symbol;
+		ASTNode declarationNode;
 		List<StatementBlockSymbolTable> tables = new ArrayList<StatementBlockSymbolTable>();
+
+		public SymbolOrTables(Symbol symbol, ASTNode declarationNode) {
+			this.symbol = symbol;
+			this.declarationNode = declarationNode;
+		}
+
+		public SymbolOrTables(SymbolOrTables fromOperation) {
+			this.addTableFrom(fromOperation);
+		}
+
+		public SymbolOrTables(StatementBlockSymbolTable blockTable) {
+			this.tables.add(blockTable);
+		}
 
 		public void addTo(SymbolTable symbolTable) {
 			if (symbol != null) {
-				symbolTable.insert(symbol);
+				insertSymbolToTable(symbolTable, declarationNode, symbol);
 			}
 			for (StatementBlockSymbolTable table : tables) {
 				symbolTable.addChild(table);
@@ -228,10 +260,9 @@ public class SymbolTableBuilderVisitor implements Visitor {
 
 	@Override
 	public SymbolOrTables visit(If ifStatement) {
-		SymbolOrTables result = new SymbolOrTables();
 		SymbolOrTables fromOperation = (SymbolOrTables) ifStatement
 				.getOperation().accept(this);
-		result.addTableFrom(fromOperation);
+		SymbolOrTables result = new SymbolOrTables(fromOperation);
 		if (ifStatement.hasElse()) {
 			SymbolOrTables fromElseOperation = (SymbolOrTables) ifStatement
 					.getElseOperation().accept(this);
@@ -259,23 +290,20 @@ public class SymbolTableBuilderVisitor implements Visitor {
 
 	@Override
 	public SymbolOrTables visit(StatementsBlock statementsBlock) {
-		SymbolOrTables result = new SymbolOrTables();
 		StatementBlockSymbolTable blockTable = new StatementBlockSymbolTable(
 				typeTable);
 		statementsBlock.setBlockSymbolTable(blockTable);
 		getSymbolsAndChildTablesFromStatementList(blockTable,
 				statementsBlock.getStatements());
-		result.tables.add(blockTable);
-		return result;
+		return new SymbolOrTables(blockTable);
 	}
 
 	@Override
 	public SymbolOrTables visit(LocalVariable localVariable) {
-		SymbolOrTables result = new SymbolOrTables();
-		result.symbol = new Symbol(localVariable.getName(),
+		Symbol symbol = new Symbol(localVariable.getName(),
 				SymbolKind.LOCAL_VARIABLE,
 				typeTable.getSymbolTypeId(localVariable.getType()));
-		return result;
+		return new SymbolOrTables(symbol, localVariable);
 	}
 
 	@Override
