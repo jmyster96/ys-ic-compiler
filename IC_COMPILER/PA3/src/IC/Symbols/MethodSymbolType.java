@@ -7,7 +7,7 @@ import IC.Parser.CourtesyErrorReporter;
 
 public class MethodSymbolType extends SymbolType {
 	List<SymbolType> formalsTypes = new ArrayList<SymbolType>();
-	SymbolType returnType;
+	private SymbolType returnType;
 
 	public MethodSymbolType(List<SymbolType> formalsTypes, SymbolType returnType) {
 		this.formalsTypes = formalsTypes;
@@ -24,12 +24,12 @@ public class MethodSymbolType extends SymbolType {
 		}
 		builder.append(CourtesyErrorReporter.joinStrings(formalsTypeNames));
 		builder.append(" -> ");
-		builder.append(returnType);
+		builder.append(getReturnType());
 		builder.append("}");
 		return builder.toString();
 	}
 
-	private static boolean listsEqual(List<?> list1, List<?> list2) {
+	private static boolean areListsEqual(List<?> list1, List<?> list2) {
 		if (list1.size() != list2.size()) {
 			return false;
 		}
@@ -57,20 +57,31 @@ public class MethodSymbolType extends SymbolType {
 			return false;
 		}
 		MethodSymbolType other = (MethodSymbolType) obj;
-		return other.returnType.equals(this.returnType)
-				&& listsEqual(other.formalsTypes, this.formalsTypes);
+		return other.getReturnType().equals(this.getReturnType())
+				&& areListsEqual(other.formalsTypes, this.formalsTypes);
 	}
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + returnType.hashCode();
+		result = prime * result + getReturnType().hashCode();
 		for (SymbolType formalType : formalsTypes) {
 			result = prime * result + formalType.hashCode();
 		}
 		return result;
 	}
 
+	public SymbolType getReturnType() {
+		return returnType;
+	}
 
+	public List<SymbolType> getFormalsTypes() {
+		return formalsTypes;
+	}
+
+	@Override
+	public boolean isReferenceType() {
+		return false;
+	}
 }

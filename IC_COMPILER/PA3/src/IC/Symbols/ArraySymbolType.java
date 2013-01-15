@@ -60,4 +60,13 @@ public class ArraySymbolType extends SymbolType {
 		return 3;
 	}
 
+	public SymbolType getBaseType() {
+		return baseType;
+	}
+
+	@Override
+	public boolean isReferenceType() {
+		return true;
+	}
+
 }

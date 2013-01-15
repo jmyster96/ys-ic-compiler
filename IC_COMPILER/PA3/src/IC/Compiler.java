@@ -8,6 +8,8 @@ import IC.Semantic.BreakContinueAndThisValidator;
 import IC.Semantic.SemanticError;
 import IC.Semantic.SemanticScopeChecker;
 import IC.Semantic.SingleMainFunctionValidator;
+import IC.Semantic.TypeCheckingVisitor;
+import IC.Semantic.TypeCheckingVisitorContext;
 import IC.Symbols.GlobalSymbolTable;
 import IC.Symbols.SymbolTable;
 import IC.Symbols.SymbolTableBuilderVisitor;
@@ -85,12 +87,20 @@ public class Compiler {
 		scopeChecker.visit(program);
 		for (SemanticError error : scopeChecker.getErrors()) {
 			printError(filepath, error);
-			hadErrors = true;
+			return false;
 		}
 
 		// (2) type-checking rules (Section 15), including a check that
 		// the class hierarchy is a tree and checking
 		// correct overriding of instance methods in subclasses;
+		TypeCheckingVisitor typeChecker = new TypeCheckingVisitor();
+		typeChecker.visit(program, new TypeCheckingVisitorContext());
+		for (SemanticError error : typeChecker.getErrors()) {
+			printError(filepath, error);
+			hadErrors = true;
+		}
+
+		
 		// (3) checking that the program contains a single main method
 		// with the correct signature;
 		SingleMainFunctionValidator mainValidator = new SingleMainFunctionValidator();
@@ -100,6 +110,8 @@ public class Compiler {
 			printError(filepath, mainValidatorResult);
 			hadErrors = true;
 		}
+
+
 		// (4) that break and continue statements appear only inside
 		// loops;
 		// (5) that the this keyword is only used in instance methods;

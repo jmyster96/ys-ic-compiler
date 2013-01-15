@@ -15,6 +15,11 @@ public class PrimitiveType extends Type {
 		return visitor.visit(this);
 	}
 
+	@Override
+	public <D, U> U accept(PropagatingVisitor<D, U> v, D context) {
+		return v.visit(this, context);
+	}
+
 	/**
 	 * Constructs a new primitive data type node.
 	 * 

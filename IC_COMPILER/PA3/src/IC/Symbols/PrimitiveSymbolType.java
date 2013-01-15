@@ -5,7 +5,7 @@ import IC.Semantic.SemanticError;
 
 public class PrimitiveSymbolType extends SymbolType {
 
-	enum PrimitiveSymbolTypes {
+	public enum PrimitiveSymbolTypes {
 		INT("int"), BOOLEAN("boolean"), NULL("null"), STRING("string"), VOID(
 				"void");
 
@@ -74,4 +74,9 @@ public class PrimitiveSymbolType extends SymbolType {
 		return 1;
 	}
 
+	@Override
+	public boolean isReferenceType() {
+		return type == PrimitiveSymbolTypes.STRING
+				|| type == PrimitiveSymbolTypes.NULL;
+	}
 }

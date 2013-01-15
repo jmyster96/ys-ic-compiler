@@ -1,0 +1,24 @@
+class ReturnStatementChecks {
+  void voidMethod() {
+    return 5;   // Should be an error
+  }
+  void voidMethod2() {
+    return;   // Should be ok
+  }
+  int intMethod() {
+    return;  // Should be an error;
+  }
+  int intMethod2() {
+    return 3;   // Should be ok;
+  }
+  int intMethod3() {
+    return "3";  // Should be an error.
+  }
+}
+class VariousChecks {
+  void aMethod(int a, string b) {
+     a = ""; // Should be an error: a is an int.
+     b = 5;  // Should be an error: b is a string.
+     b = ""; // Should be ok.
+  }
+}

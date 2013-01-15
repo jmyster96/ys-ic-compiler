@@ -22,6 +22,7 @@ import IC.Symbols.PrimitiveSymbolType.PrimitiveSymbolTypes;
 import java_cup.symbol;
 
 public class SymbolTypeTable {
+	private static final PrimitiveSymbolType NULL_TYPE = new PrimitiveSymbolType(PrimitiveSymbolTypes.NULL);
 	String programName;
 	List<SymbolType> symbolTypes = new ArrayList<SymbolType>();
 	Map<SymbolType, Integer> symbolTypesIds = new HashMap<SymbolType, Integer>();
@@ -43,8 +44,8 @@ public class SymbolTypeTable {
 		return symbolTypes.get(id - 1);
 	}
 
-	public int getSymbolTypeId(Type type) {
-		return addOrGetSymbolTypeId(createSymbolType(type));
+	public int getSymbolTypeId(Type type, int dimension) {
+		return addOrGetSymbolTypeId(createSymbolType(type, dimension));
 	}
 
 	public int getSymbolTypeId(Method method) {
@@ -71,15 +72,17 @@ public class SymbolTypeTable {
 	private SymbolType createSymbolType(Method method) {
 		List<SymbolType> formalsTypes = new ArrayList<SymbolType>();
 		for (Formal formal : method.getFormals()) {
-			formalsTypes.add(getSymbolById(getSymbolTypeId(formal.getType())));
+			formalsTypes.add(getSymbolById(getSymbolTypeId(formal.getType(),
+					formal.getType().getDimension())));
 		}
-		SymbolType returnType = getSymbolById(getSymbolTypeId(method.getType()));
+		SymbolType returnType = getSymbolById(getSymbolTypeId(method.getType(),
+				method.getType().getDimension()));
 		return new MethodSymbolType(formalsTypes, returnType);
 	}
 
-	private SymbolType createSymbolType(Type type) {
+	private SymbolType createSymbolType(Type type, int dimension) {
 		SymbolType basicType = addOrGetSymbolType(astTypeToSymbolType(type));
-		return createSymbolType(basicType, type.getDimension());
+		return createSymbolType(basicType, dimension);
 	}
 
 	private SymbolType createSymbolType(SymbolType basicType, int dimension) {
@@ -145,4 +148,12 @@ public class SymbolTypeTable {
 	private ClassSymbolType getClassSymbolByClassName(String className) {
 		return (ClassSymbolType) getSymbolById(getSymbolIdByClassName(className));
 	}
+
+	public boolean isTypeLessThanOrEquals(SymbolType type1, SymbolType type2) {
+		if (type1.equals(NULL_TYPE) && type2.isReferenceType()) {
+			return true;
+		}
+		return type1.equals(type2);
+	}
+
 }

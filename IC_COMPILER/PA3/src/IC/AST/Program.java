@@ -18,6 +18,11 @@ public class Program extends ASTNode {
 		return visitor.visit(this);
 	}
 
+	@Override
+	public <D, U> U accept(PropagatingVisitor<D, U> v, D context) {
+		return v.visit(this, context);
+	}
+
 	/**
 	 * Constructs a new program node.
 	 * 

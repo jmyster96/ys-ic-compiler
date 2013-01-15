@@ -19,6 +19,10 @@ public class ClassSymbolType extends SymbolType {
 		baseClassTypeId = id;
 	}
 
+	public String getName() {
+		return name;
+	}
+	
 	@Override
 	public String toString() {
 		return name
@@ -63,4 +67,8 @@ public class ClassSymbolType extends SymbolType {
 		return true;
 	}
 
+	@Override
+	public boolean isReferenceType() {
+		return true;
+	}
 }

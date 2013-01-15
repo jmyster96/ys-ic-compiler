@@ -13,4 +13,7 @@ public abstract class SymbolType {
 	public abstract String getHeader();
 
 	public abstract int getDisplaySortIndex();
+
+	public abstract boolean isReferenceType();
+
 }

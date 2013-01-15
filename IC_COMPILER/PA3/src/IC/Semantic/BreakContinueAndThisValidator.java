@@ -135,7 +135,9 @@ public class BreakContinueAndThisValidator implements Visitor {
 
 	@Override
 	public Object visit(Return returnStatement) {
-		returnStatement.getValue().accept(this);
+		if (returnStatement.hasValue()) {
+			returnStatement.getValue().accept(this);
+		}
 		return null;
 	}
 

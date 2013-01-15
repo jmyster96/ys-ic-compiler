@@ -15,6 +15,11 @@ public class NewArray extends New {
 		return visitor.visit(this);
 	}
 
+	@Override
+	public <D, U> U accept(PropagatingVisitor<D, U> v, D context) {
+		return v.visit(this, context);
+	}
+
 	/**
 	 * Constructs a new array creation expression node.
 	 * 

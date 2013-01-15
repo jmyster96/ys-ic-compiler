@@ -1,4 +1,8 @@
+class Fictional extends Imaginary {
+}
 class A {
+  G xx;   // Should be an error.
+  A xxxx; // Should be ok.
   int g;
   int a(int b) {
     b = 3;  // Should be ok
@@ -11,7 +15,9 @@ class A {
     statE();   // Should also be ok.
     A.no();      // Should be an ERROR: 'no' is not a static method in A 
     B.a();   // Should be an ERROR
+
     
+
     Static.yo();  // Should be ok
     Static.ho();  // Should be ERROR: no 'ho' in Static
     Static.go();  // Should be ERROR: 'go' isn't static

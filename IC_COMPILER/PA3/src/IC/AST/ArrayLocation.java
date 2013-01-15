@@ -15,6 +15,11 @@ public class ArrayLocation extends Location {
 		return visitor.visit(this);
 	}
 
+	@Override
+	public <D, U> U accept(PropagatingVisitor<D, U> v, D context) {
+		return v.visit(this, context);
+	}
+
 	/**
 	 * Constructs a new array reference node.
 	 * 
@@ -36,4 +41,5 @@ public class ArrayLocation extends Location {
 	public Expression getIndex() {
 		return index;
 	}
+
 }

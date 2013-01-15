@@ -185,10 +185,9 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(Return returnStatement) {
-		returnStatement.getValue().accept(this);
-		// FIXME: type-check check if return value matches functions definition
-		// look at father->father->type (ergo: return type of method)
-		// type check: check that we are inside a method
+		if (returnStatement.hasValue()) {
+			returnStatement.getValue().accept(this);
+		}
 		return true;
 	}
 
@@ -305,7 +304,6 @@ public class SemanticScopeChecker implements Visitor {
 	@Override
 	public Object visit(NewClass newClass) {
 		verifySymbolIsOfKind(newClass, newClass.getName(), SymbolKind.CLASS);
-		// FIXME: should there be a passing arguments to constructor check?
 		return true;
 	}
 
@@ -326,10 +324,6 @@ public class SemanticScopeChecker implements Visitor {
 	public Object visit(MathBinaryOp binaryOp) {
 		binaryOp.getFirstOperand().accept(this);
 		binaryOp.getSecondOperand().accept(this);
-		// FIXME: type-checking: need to validate that these are a part can be
-		// up cast to the specific operation types
-		binaryOp.getFirstOperand();
-		binaryOp.getSecondOperand();
 		return true;
 	}
 
