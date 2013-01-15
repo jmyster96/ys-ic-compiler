@@ -118,7 +118,8 @@ public class Compiler {
 		}
 
 		// (6) that the library class has the correct name (Library).
-		// This is done in the Syntax analysis.
+
+		// NOTE: This is done in the Syntax analysis.
 
 		if (options.dumpSymTab) {
 			System.out.println();
