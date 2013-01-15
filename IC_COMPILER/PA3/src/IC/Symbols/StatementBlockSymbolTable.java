@@ -1,5 +1,7 @@
 package IC.Symbols;
 
+import IC.SymbolTypes.SymbolTypeTable;
+
 public class StatementBlockSymbolTable extends SymbolTable {
 
 	public StatementBlockSymbolTable(SymbolTypeTable typeTable) {

@@ -3,8 +3,6 @@ package IC.Semantic;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.sun.org.apache.xml.internal.serializer.utils.Utils;
-
 import IC.DataTypes;
 import IC.AST.ArrayLocation;
 import IC.AST.Assignment;

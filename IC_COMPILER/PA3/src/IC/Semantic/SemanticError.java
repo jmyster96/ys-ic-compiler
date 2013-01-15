@@ -3,6 +3,8 @@ package IC.Semantic;
 import IC.ICCompilerError;
 
 public class SemanticError extends ICCompilerError {
+	private static final long serialVersionUID = -1098747667813601236L;
+
 	public SemanticError(String message) {
 		super(message);
 	}

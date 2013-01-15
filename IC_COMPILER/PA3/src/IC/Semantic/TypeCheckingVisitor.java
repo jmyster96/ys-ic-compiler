@@ -1,32 +1,29 @@
 package IC.Semantic;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Stack;
 
+import IC.UnaryOps;
 import IC.AST.*;
-import IC.Parser.CourtesyErrorReporter;
-import IC.Symbols.ArraySymbolType;
-import IC.Symbols.ClassSymbolTable;
-import IC.Symbols.GlobalSymbolTable;
-import IC.Symbols.MethodSymbolTable;
-import IC.Symbols.MethodSymbolType;
-import IC.Symbols.PrimitiveSymbolType;
-import IC.Symbols.PrimitiveSymbolType.PrimitiveSymbolTypes;
-import IC.Symbols.ClassSymbolType;
+import IC.SymbolTypes.ArraySymbolType;
+import IC.SymbolTypes.ClassSymbolType;
+import IC.SymbolTypes.MethodSymbolType;
+import IC.SymbolTypes.PrimitiveSymbolType;
+import IC.SymbolTypes.SymbolType;
+import IC.SymbolTypes.SymbolTypeTable;
+import IC.SymbolTypes.PrimitiveSymbolType.PrimitiveSymbolTypes;
 import IC.Symbols.Symbol;
 import IC.Symbols.SymbolKind;
 import IC.Symbols.SymbolTable;
 import IC.Symbols.SymbolTableException;
-import IC.Symbols.SymbolType;
-import IC.Symbols.SymbolTypeTable;
 
 public class TypeCheckingVisitor implements
 		PropagatingVisitor<TypeCheckingVisitorContext, SymbolType> {
 
 	private Stack<SymbolTable> symScopeStack = new Stack<SymbolTable>();
 	private List<SemanticError> errors = new ArrayList<SemanticError>();
+	private TypeComparer typeComparer;
 
 	public TypeCheckingVisitor() {
 	}
@@ -46,6 +43,11 @@ public class TypeCheckingVisitor implements
 	public SymbolType visit(Program program, TypeCheckingVisitorContext context) {
 		// recursive call to class
 		symScopeStack.push(program.getGlobalSymbolTable());
+
+		// HACK: Initialize the type comparer here (because it needs a type
+		// table).
+		typeComparer = new TypeComparer(getCurrentScope().getTypeTable());
+
 		for (ICClass clazz : program.getClasses()) {
 			clazz.accept(this, context);
 		}
@@ -87,25 +89,82 @@ public class TypeCheckingVisitor implements
 	@Override
 	public SymbolType visit(VirtualMethod method,
 			TypeCheckingVisitorContext context) {
-		visitMethod(method, context);
-		return null;
+		MethodSymbolType methodSymbolType = visitMethod(method, context);
+
+		try {
+			Symbol methodInBaseClass = getCurrentScope().getParent().lookup(
+					method.getName());
+			SymbolType symbolInBaseClassType = getTypeTable().getSymbolById(
+					methodInBaseClass.getTypeId());
+			boolean symbolHidingLegal = false;
+			String errorMessage = "";
+			if (methodInBaseClass.getKind() == SymbolKind.VIRTUAL_METHOD) {
+				MethodSymbolType methodInBaseClassType = (MethodSymbolType) symbolInBaseClassType;
+				if (methodInBaseClassType.getFormalsTypes().size() != methodSymbolType
+						.getFormalsTypes().size()) {
+					errorMessage += "Wrong number of arguments";
+				} else {
+					symbolHidingLegal = true;
+					for (int i = 0; i < methodInBaseClassType.getFormalsTypes()
+							.size(); ++i) {
+						if (!typeComparer.isTypeLessThanOrEquals(
+								methodInBaseClassType.getFormalsTypes().get(i),
+								methodSymbolType.getFormalsTypes().get(i))) {
+							symbolHidingLegal = false;
+							errorMessage += "Type of arg"
+									+ i
+									+ " ('"
+									+ method.getFormals().get(i).getName()
+									+ "')"
+									+ " is expected to be >= '"
+									+ methodInBaseClassType.getFormalsTypes()
+											.get(i) + "', but it is '"
+									+ methodSymbolType.getFormalsTypes().get(i)
+									+ "'\n";
+						}
+					}
+				}
+				if (!typeComparer.isTypeLessThanOrEquals(
+						methodSymbolType.getReturnType(),
+						methodInBaseClassType.getReturnType())) {
+					errorMessage += "Return type '"
+							+ methodSymbolType.getReturnType()
+							+ "' is expected to <= '"
+							+ methodInBaseClassType.getReturnType() + "'\n";
+					symbolHidingLegal = false;
+				}
+			} else if (methodInBaseClass.getKind() == SymbolKind.STATIC_METHOD) {
+				errorMessage += "Method in base class is marked as static";
+			}
+			if (!symbolHidingLegal) {
+				errors.add(new SemanticError("Method [" + method.getName()
+						+ "] hides '" + methodInBaseClass.getKind()
+						+ "' in base class. Method signature: "
+						+ methodSymbolType + ", base class type: "
+						+ symbolInBaseClassType + ". Errors:\n" + errorMessage,
+						method.getLine()));
+			}
+		} catch (SymbolTableException e) {
+			// That's ok: not every method hides something in base class.
+		}
+
+		return methodSymbolType;
 	}
 
 	@Override
 	public SymbolType visit(StaticMethod method,
 			TypeCheckingVisitorContext context) {
-		visitMethod(method, context);
-		return null;
+		return visitMethod(method, context);
 	}
 
 	@Override
 	public SymbolType visit(LibraryMethod method,
 			TypeCheckingVisitorContext context) {
-		visitMethod(method, context);
-		return null;
+		return visitMethod(method, context);
 	}
 
-	private void visitMethod(Method method, TypeCheckingVisitorContext context) {
+	private MethodSymbolType visitMethod(Method method,
+			TypeCheckingVisitorContext context) {
 		symScopeStack.push(method.getMethodSymbolTable());
 		int typeId = -1;
 		try {
@@ -116,15 +175,15 @@ public class TypeCheckingVisitor implements
 			// SymbolTableBuilder.
 			e.printStackTrace();
 		}
-		if (typeId != -1) {
-			context.currentMethodSymbolType = (MethodSymbolType) getTypeTable()
-					.getSymbolById(typeId);
-			for (Statement stmnt : method.getStatements()) {
-				stmnt.accept(this, context);
-			}
-			context.currentMethodSymbolType = null;
+		MethodSymbolType symbolType = (MethodSymbolType) getTypeTable()
+				.getSymbolById(typeId);
+		context.currentMethodSymbolType = symbolType;
+		for (Statement stmnt : method.getStatements()) {
+			stmnt.accept(this, context);
 		}
+		context.currentMethodSymbolType = null;
 		symScopeStack.pop();
+		return symbolType;
 	}
 
 	@Override
@@ -155,7 +214,7 @@ public class TypeCheckingVisitor implements
 
 	private boolean checkTypeError(ASTNode node, SymbolType expectedType,
 			SymbolType actualType) {
-		if (!getTypeTable().isTypeLessThanOrEquals(actualType, expectedType)) {
+		if (!typeComparer.isTypeLessThanOrEquals(actualType, expectedType)) {
 			errors.add(new SemanticError("Type error in node '"
 					+ node.getClass().getSimpleName() + "': unexpected type: '"
 					+ actualType
@@ -497,7 +556,8 @@ public class TypeCheckingVisitor implements
 		checkTypeError(newArray, getPrimitiveType(PrimitiveSymbolTypes.INT),
 				sizeType);
 		SymbolType arrayType = getTypeTable().getSymbolById(
-				getTypeTable().getSymbolTypeId(newArray.getType(), 1));
+				getTypeTable().getSymbolTypeId(newArray.getType(),
+						newArray.getType().getDimension() + 1));
 		return arrayType;
 	}
 
@@ -515,15 +575,34 @@ public class TypeCheckingVisitor implements
 	@Override
 	public SymbolType visit(MathBinaryOp binaryOp,
 			TypeCheckingVisitorContext context) {
+		SymbolType leftType = binaryOp.getFirstOperand().accept(this, context);
+		SymbolType rightType = binaryOp.getSecondOperand()
+				.accept(this, context);
 		switch (binaryOp.getOperator()) {
 		case DIVIDE:
 		case MINUS:
 		case MOD:
 		case MULTIPLY:
-		case PLUS:
 			checkBinaryOp(binaryOp, context,
 					getPrimitiveType(PrimitiveSymbolTypes.INT));
 			return getPrimitiveType(PrimitiveSymbolTypes.INT);
+		case PLUS:
+			if (typeComparer.isTypeLessThanOrEquals(leftType,
+					getPrimitiveType(PrimitiveSymbolTypes.STRING))
+					&& typeComparer.isTypeLessThanOrEquals(rightType,
+							getPrimitiveType(PrimitiveSymbolTypes.STRING))) {
+				return getPrimitiveType(PrimitiveSymbolTypes.STRING);
+			}
+			if (typeComparer.isTypeLessThanOrEquals(leftType,
+					getPrimitiveType(PrimitiveSymbolTypes.INT))
+					&& typeComparer.isTypeLessThanOrEquals(rightType,
+							getPrimitiveType(PrimitiveSymbolTypes.INT))) {
+				return getPrimitiveType(PrimitiveSymbolTypes.INT);
+			}
+			errors.add(new SemanticError(
+					"'+' operator can be used for either INT addition or STRING concatenation. Types received: "
+							+ leftType + ", " + rightType, binaryOp.getLine()));
+			return getPrimitiveType(PrimitiveSymbolTypes.NULL);
 		case GT:
 		case GTE:
 		case LT:
@@ -533,11 +612,7 @@ public class TypeCheckingVisitor implements
 			return getPrimitiveType(PrimitiveSymbolTypes.BOOLEAN);
 		case EQUAL:
 		case NEQUAL:
-			SymbolType leftType = binaryOp.getFirstOperand().accept(this,
-					context);
-			SymbolType rightType = binaryOp.getSecondOperand().accept(this,
-					context);
-			if (!(getTypeTable().isTypeLessThanOrEquals(leftType, rightType) || getTypeTable()
+			if (!(typeComparer.isTypeLessThanOrEquals(leftType, rightType) || typeComparer
 					.isTypeLessThanOrEquals(rightType, leftType))) {
 				errors.add(new SemanticError(
 						"Can't check equality in non-matching types. Types: "
@@ -571,8 +646,20 @@ public class TypeCheckingVisitor implements
 	@Override
 	public SymbolType visit(MathUnaryOp unaryOp,
 			TypeCheckingVisitorContext context) {
+		if (unaryOp.getOperand() instanceof Literal
+				&& unaryOp.getOperator() == UnaryOps.UMINUS) {
+			// HACK: For the bounds checking.
+			((Literal) unaryOp.getOperand()).yourParentIsUMinus();
+		}
 		return checkUnaryOp(unaryOp, context,
 				getPrimitiveType(PrimitiveSymbolTypes.INT));
+	}
+
+	@Override
+	public SymbolType visit(LogicalUnaryOp unaryOp,
+			TypeCheckingVisitorContext context) {
+		return checkUnaryOp(unaryOp, context,
+				getPrimitiveType(PrimitiveSymbolTypes.BOOLEAN));
 	}
 
 	private SymbolType checkUnaryOp(UnaryOp unaryOp,
@@ -583,19 +670,13 @@ public class TypeCheckingVisitor implements
 	}
 
 	@Override
-	public SymbolType visit(LogicalUnaryOp unaryOp,
-			TypeCheckingVisitorContext context) {
-		return checkUnaryOp(unaryOp, context,
-				getPrimitiveType(PrimitiveSymbolTypes.BOOLEAN));
-	}
-
-	@Override
 	public SymbolType visit(Literal literal, TypeCheckingVisitorContext context) {
 		switch (literal.getType()) {
 		case TRUE:
 		case FALSE:
 			return getPrimitiveType(PrimitiveSymbolTypes.BOOLEAN);
 		case INTEGER:
+			doBoundsChecking(literal);
 			return getPrimitiveType(PrimitiveSymbolTypes.INT);
 		case NULL:
 			return getPrimitiveType(PrimitiveSymbolTypes.NULL);
@@ -605,6 +686,18 @@ public class TypeCheckingVisitor implements
 			// Should never get here, a literal must have one of the above
 			// values.
 			return getVoidType();
+		}
+	}
+
+	private void doBoundsChecking(Literal literal) {
+		if (literal.isParentUMinus() && literal.getValue().equals("2147483648")) {
+			return; // It's in bounds.
+		}
+		try {
+			Integer.valueOf((String) literal.getValue());
+		} catch (NumberFormatException e) {
+			errors.add(new SemanticError("Integer is out of bounds: "
+					+ literal.getValue(), literal.getLine()));
 		}
 	}
 

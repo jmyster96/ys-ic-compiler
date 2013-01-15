@@ -8,13 +8,14 @@ import IC.Semantic.BreakContinueAndThisValidator;
 import IC.Semantic.SemanticError;
 import IC.Semantic.SemanticScopeChecker;
 import IC.Semantic.SingleMainFunctionValidator;
+import IC.Semantic.SymbolTableBuilderVisitor;
 import IC.Semantic.TypeCheckingVisitor;
 import IC.Semantic.TypeCheckingVisitorContext;
 import IC.Symbols.GlobalSymbolTable;
 import IC.Symbols.SymbolTable;
-import IC.Symbols.SymbolTableBuilderVisitor;
 
 import java.io.*;
+import java.util.List;
 
 import java_cup.runtime.Symbol;
 
@@ -67,7 +68,6 @@ public class Compiler {
 		// try {
 		// ///////////////////////////
 		// Semantic checks start here
-		boolean hadErrors = false;
 		// 1. Add the Library class as an actual class for simplicity.
 		program.getClasses().add(0, libraryClass);
 
@@ -75,9 +75,8 @@ public class Compiler {
 		SymbolTableBuilderVisitor symTabBuilder = new SymbolTableBuilderVisitor(
 				new File(options.sourcePath).getName());
 		GlobalSymbolTable symbolTable = symTabBuilder.visit(program);
-		for (SemanticError error : symTabBuilder.getErrors()) {
-			printError(filepath, error);
-			hadErrors = true;
+		if (printErrors(filepath, symTabBuilder.getErrors())) {
+			return false;
 		}
 
 		//
@@ -85,8 +84,7 @@ public class Compiler {
 
 		SemanticScopeChecker scopeChecker = new SemanticScopeChecker();
 		scopeChecker.visit(program);
-		for (SemanticError error : scopeChecker.getErrors()) {
-			printError(filepath, error);
+		if (printErrors(filepath, scopeChecker.getErrors())) {
 			return false;
 		}
 
@@ -95,12 +93,10 @@ public class Compiler {
 		// correct overriding of instance methods in subclasses;
 		TypeCheckingVisitor typeChecker = new TypeCheckingVisitor();
 		typeChecker.visit(program, new TypeCheckingVisitorContext());
-		for (SemanticError error : typeChecker.getErrors()) {
-			printError(filepath, error);
-			hadErrors = true;
+		if (printErrors(filepath, typeChecker.getErrors())) {
+			return false;
 		}
 
-		
 		// (3) checking that the program contains a single main method
 		// with the correct signature;
 		SingleMainFunctionValidator mainValidator = new SingleMainFunctionValidator();
@@ -108,9 +104,8 @@ public class Compiler {
 				.visit(program);
 		if (mainValidatorResult != null) {
 			printError(filepath, mainValidatorResult);
-			hadErrors = true;
+			return false;
 		}
-
 
 		// (4) that break and continue statements appear only inside
 		// loops;
@@ -118,18 +113,28 @@ public class Compiler {
 		// and
 		BreakContinueAndThisValidator keywordValid = new BreakContinueAndThisValidator();
 		keywordValid.visit(program);
-		for (SemanticError error : keywordValid.getErrors()) {
-			printError(filepath, error);
-			hadErrors = true;
+		if (printErrors(filepath, keywordValid.getErrors())) {
+			return false;
 		}
+
 		// (6) that the library class has the correct name (Library).
 		// This is done in the Syntax analysis.
 
-		if (!hadErrors && options.dumpSymTab) {
+		if (options.dumpSymTab) {
 			System.out.println();
 			System.out.println(symbolTable.toString());
 		}
-		return !hadErrors;
+		return true;
+	}
+
+	private static boolean printErrors(String filepath,
+			List<SemanticError> errors) throws IOException {
+		boolean hadErrors2 = false;
+		for (SemanticError error : errors) {
+			printError(filepath, error);
+			hadErrors2 = true;
+		}
+		return hadErrors2;
 	}
 
 	private static void printAST(Options options, ICClass libraryClass,

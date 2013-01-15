@@ -67,192 +67,31 @@ Finally the file TestBonus2Case.ic was created for the cases in bonus 2.
 _______________
 ERROR REPORTING
 
-For each syntax error, we try to show some informative info:
+For each semantic error, we try to show some informative info:
 
 - The line number in which the erroneous token appeared;
 - The erroneous token itself;
 - The whole line to give context;
-- A list of expected tokens (up to 5):
 
-  Implemented by trying to see if an action could be taken for any other possible symbol.
-  For example, if trying to parse the following class member:
-  int [0] arrField;
-  The INTEGER(0) is an illegal symbol in that case.
-  int [(*)0] arrField;
-  But, by iterating through any other symbol in the current parse state, we can see that 
-  in that state the only possible other symbol is RB (because the parser knows that it currently produces 'type').
-  So that information is used: The action table row is scanned to see if any other symbol would be legal. If only
-  a limited number of symbols are legal, we print them.
-  
-  Implemented in IC.cup->Parser.java, getPossibleActions().
-  
-- For some rare cases, an additional specialized error message:
+_____________________________
+DESIGN/IMPLEMENTATION CHOICES (not all of are good in retrospect)
 
-  Currently detects some occurences of a single case (the one that was handled for PA2 bonus):
-  The cases of if (cond) int x;
-  
-  The detection is done by stupidly inspecting the stack and the current token, and looking for cases where the
-  current token is a type definition, and the closest ancestor is an IF, ELSE or WHILE statement. It'd probably miss
-  out on many cases.
-  
-  Implemented in CourtesyErrorReporter.java.
+1. We didn't add a reference to the enclosing Symbol Table from each AST Node.
+   Instead, while traversing the AST, we keep track of what is the current enclosing
+   scope. This has proven to be a bad design choice, that will probably have to be
+   changed for the next PA.
+   
+2. Integer bounds checking is hackish: to allow -2147483648 it checks if the parent is the parent is UMinus.
+   It's hard to do any better without constant folding.
+   
+3. Each step of the semantic checks (almost) is done in its own Visitor.
+   PropagatingVisitor was implemented too late. Some of the visitors should've been
+   propagating.
 
-We did not implement bonus 1. :(
-
-___________________
-KNOWN DESIGN ISSUES
-
-1. The value of the 'value' property of a Literal object of type LiteralTypes.INTEGER 
-   is of type String.
-
-We thought it'd be better design to give an actual java Integer to the Literal AST node. But the 
-range checking proved harder than it initially seemed.
-We had issues with the number -2147483648 (-2^32). This number, which is a legal int value, is parsed
-as two tokens: UMINUS and INTEGER_LITERAL(2147483648).
-Note that this is an illegal value for an integer literal, thus parseInt() didn't work.
-  
-As a possible fix, we thought about changing the regex for INTEGER_LITERAL:
-from [0]+|[1-9]({DIGIT})*
-to   [0]+|-?[1-9]({DIGIT})*
-  
-But this was not a good call, as something like -5-3 would be parsed as INTEGER(-5) INTEGER(-3) 
-instead of INTEGER(-5) MINUS INTEGER(3)
-  
-So we'd have to delay the actual parseInt() operation to a later stage of the compiler.
-
-On the other hand, the value of a Literal object of type LiteralTypes.STRING does hold the unquoted
-and unescaped instance of the string.
-
-
-2. Since Library.cup and IC.cup use the same lexer, they also need to
-   have the same terminal specifications.
-
-We started off by having only a subset of the terminals in Library.cup. The problem is that 
-when generating LibraryParser.java, sym.java is also generated. But that version of sym.java is ignored, and
-only the version of sym.java from generating IC.cup is used.
-
-So the two of them have to be synced.
-
-
-3. Duplicated logic in Library.cup and IC.cup.
-
-Some of the code relating to error reporting is duplicated in IC.cup and Library.cup. Since some of it
-couldn't be refactored out of the .cup files (since they access protected fields of lr_parser), all of it
-was duplicated.
-
-___________
-THE GRAMMAR
-
-In producing the grammar, we tried to stay close to the syntax of the IC language.
-
-The terminals are the same we had in PA1, with one addition (UMINUS).
-
-
-Below are the productions (taken from CUP's -dump_grammar option), with some notes where due.
-Please read all of the comments, as they also explain important changes (such as bonus implementation).
-
-===== Productions =====
-[0] program ::= class_list 
-[2] class_list ::=                          
-Syntactically, an empty program is legal.
-
-[3] class_list ::= class_list class
-This order guarantees that the classes will be parsed in top-to-bottom order.
-This repeats itself in every list parsing: fields_or_methods, fields, id_list, formals,
-statement_list, arg_list.
-
-[4] class ::= CLASS CLASS_ID LCBR fields_or_methods RCBR 
-[5] class ::= CLASS CLASS_ID EXTENDS CLASS_ID LCBR fields_or_methods RCBR 
-[6] fields_or_methods ::= 
-[7] fields_or_methods ::= fields_or_methods fields 
-[8] fields_or_methods ::= fields_or_methods method 
-A helper class was made to deal with those: ClassMembersHelper. It holds fields and methods.
-
-[9] fields ::= type id_list SEMI 
-A deviation from the grammar in the IC spec: this non-terminal is called 'fields' and not 'field'. That's
-because it is a declaration of one-or-more fields, actually.
-
-[10] id_list ::= ID 
-[11] id_list ::= id_list COMMA ID 
-[12] method ::= type ID LP formals RP LCBR statement_list RCBR 
-[13] method ::= VOID ID LP formals RP LCBR statement_list RCBR 
-[14] method ::= STATIC type ID LP formals RP LCBR statement_list RCBR 
-[15] method ::= STATIC VOID ID LP formals RP LCBR statement_list RCBR 
-A special production had to be used for VOID-returning-methods.
-
-[16] formals ::= 
-[17] formals ::= formal 
-[18] formals ::= formals COMMA formal 
-[19] formal ::= type ID 
-[20] type ::= INT 
-[21] type ::= BOOLEAN 
-[22] type ::= STRING 
-[23] type ::= CLASS_ID 
-[24] type ::= type LB RB 
-[25] statement_list ::= 
-[26] statement_list ::= statement_list statement 
-[27] statement ::= decl_statement
-[28] statement ::= action_statement
-Bonus 2: We divided the statement into two possible statement types: Those that declare
-new variables, and those that don't.
-Conditional branches don't allow those that do to be a single statement with no new enclosing scope.
-
-[29] action_statement ::= location ASSIGN expression SEMI 
-[30] action_statement ::= call SEMI 
-[31] action_statement ::= RETURN SEMI 
-[32] action_statement ::= RETURN expression SEMI 
-[33] action_statement ::= IF LP expression RP action_statement 
-[34] action_statement ::= IF LP expression RP action_statement ELSE action_statement 
-[35] action_statement ::= WHILE LP expression RP action_statement 
-[36] action_statement ::= BREAK SEMI 
-[37] action_statement ::= CONTINUE SEMI 
-[38] action_statement ::= LCBR statement_list RCBR 
-[39] decl_statement ::= type ID SEMI 
-[40] decl_statement ::= type ID ASSIGN expression SEMI 
-[41] expression ::= location 
-[42] expression ::= call 
-[43] expression ::= THIS 
-[44] expression ::= NEW CLASS_ID LP RP 
-[45] expression ::= NEW type LB expression RB 
-[46] expression ::= expression DOT LENGTH 
-[47] expression ::= binop 
-[48] expression ::= unop 
-A deviation from the IC syntax in the spec: instead of the production
-[expression ::= expression binop expression] where binop just stands for the operator,
-our non terminal binop stands for the binary operation.
-This had to be like this for the precedence declarations to be taken into account.
-Same for unop.
-
-[49] expression ::= literal 
-[50] expression ::= LP expression RP 
-[51] call ::= static_call 
-[52] call ::= virtual_call 
-[53] static_call ::= CLASS_ID DOT ID LP arg_list RP 
-[54] virtual_call ::= ID LP arg_list RP 
-[55] virtual_call ::= expression DOT ID LP arg_list RP 
-[56] arg_list ::= 
-[57] arg_list ::= expression 
-[58] arg_list ::= arg_list COMMA expression 
-[59] location ::= ID 
-[60] location ::= expression DOT ID 
-[61] location ::= expression LB expression RB 
-[62] binop ::= expression PLUS expression 
-[63] binop ::= expression MINUS expression 
-[64] binop ::= expression MULTIPLY expression 
-[65] binop ::= expression DIVIDE expression 
-[66] binop ::= expression MOD expression 
-[67] binop ::= expression LT expression 
-[68] binop ::= expression LTE expression 
-[69] binop ::= expression GT expression 
-[70] binop ::= expression GTE expression 
-[71] binop ::= expression EQUAL expression 
-[72] binop ::= expression NEQUAL expression 
-[73] binop ::= expression LAND expression 
-[74] binop ::= expression LOR expression 
-[75] unop ::= MINUS expression 
-[76] unop ::= LNEG expression 
-[77] literal ::= INTEGER 
-[78] literal ::= QUOTE 
-[79] literal ::= TRUE 
-[80] literal ::= FALSE 
-[81] literal ::= NULL
+4. There's a Scope checker and a Type checker. Sometimes it's hard to tell if
+   a certain issue is a 'scope' issue or a 'type' issue. Rule of thumb: if a certain
+   semantic check requires only the symbol's kind but not its type, it's in the Scope
+   checker.
+   
+5. Main function validator is implemented in an AST visitor. It should've been checked
+   on the symbol table (that was though of only after the symbol table was built). 

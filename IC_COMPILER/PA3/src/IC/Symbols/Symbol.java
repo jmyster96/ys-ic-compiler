@@ -6,11 +6,13 @@ public class Symbol {
 	SymbolKind kind;
 	// int, string, etc
 	int symbolTypeId;
+	int lineNumber;
 
-	public Symbol(String name, SymbolKind kind, int symbolTypeIndex) {
+	public Symbol(String name, SymbolKind kind, int symbolTypeIndex, int lineNumber) {
 		this.name = name;
 		this.kind = kind;
 		this.symbolTypeId = symbolTypeIndex;
+		this.lineNumber = lineNumber;
 	}
 
 	public int getTypeId() {

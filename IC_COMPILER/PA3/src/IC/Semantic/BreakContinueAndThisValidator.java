@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import IC.AST.ASTNode;
 import IC.AST.ArrayLocation;
 import IC.AST.Assignment;
 import IC.AST.Break;
@@ -43,19 +42,27 @@ import IC.AST.VirtualMethod;
 import IC.AST.Visitor;
 import IC.AST.While;
 
+/**
+ * This visitor traverses the AST, keeps track of whether it is in 'while' loops
+ * or in virtual methods. When encountering a 'break', 'continue' or 'this' keyword,
+ * it checks that a relevant parent exists.
+ */
 public class BreakContinueAndThisValidator implements Visitor {
 
 	private List<SemanticError> errors = new ArrayList<SemanticError>();
 	private Map<String, Integer> nodeAncestorsCounters = new HashMap<String, Integer>();
 
+	@SuppressWarnings("rawtypes")
 	private void incrementCounter(Class clazz) {
 		nodeAncestorsCounters.put(clazz.getSimpleName(), getCounter(clazz) + 1);
 	}
 
+	@SuppressWarnings("rawtypes")
 	private void decrementCounter(Class clazz) {
 		nodeAncestorsCounters.put(clazz.getSimpleName(), getCounter(clazz) - 1);
 	}
 
+	@SuppressWarnings("rawtypes")
 	private int getCounter(Class clazz) {
 		Integer currentValue = nodeAncestorsCounters.get(clazz.getSimpleName());
 		return currentValue == null ? 0 : currentValue;

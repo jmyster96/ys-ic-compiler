@@ -1,7 +1,7 @@
 package IC.Semantic;
 
-import IC.Symbols.ClassSymbolType;
-import IC.Symbols.MethodSymbolType;
+import IC.SymbolTypes.ClassSymbolType;
+import IC.SymbolTypes.MethodSymbolType;
 
 public class TypeCheckingVisitorContext {
 	ClassSymbolType currentClassSymbolType; // Used for 'this' type checking

@@ -1,7 +1,6 @@
-package IC.Symbols;
+package IC.SymbolTypes;
 
 import IC.AST.PrimitiveType;
-import IC.Semantic.SemanticError;
 
 public class PrimitiveSymbolType extends SymbolType {
 

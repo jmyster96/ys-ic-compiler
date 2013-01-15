@@ -1,5 +1,7 @@
 package IC.Symbols;
 
+import IC.SymbolTypes.SymbolTypeTable;
+
 public class ClassSymbolTable extends SymbolTable {
 
 	public ClassSymbolTable(String name, SymbolTypeTable typeTable) {

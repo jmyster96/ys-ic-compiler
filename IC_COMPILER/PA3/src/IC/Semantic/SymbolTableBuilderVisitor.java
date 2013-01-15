@@ -1,10 +1,9 @@
-package IC.Symbols;
+package IC.Semantic;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
 
 import IC.AST.ASTNode;
 import IC.AST.ArrayLocation;
@@ -36,22 +35,27 @@ import IC.AST.StatementsBlock;
 import IC.AST.StaticCall;
 import IC.AST.StaticMethod;
 import IC.AST.This;
-import IC.AST.Type;
 import IC.AST.UserType;
 import IC.AST.VariableLocation;
 import IC.AST.VirtualCall;
 import IC.AST.VirtualMethod;
 import IC.AST.Visitor;
 import IC.AST.While;
-import IC.Semantic.SemanticError;
+import IC.SymbolTypes.SymbolTypeTable;
+import IC.Symbols.ClassSymbolTable;
+import IC.Symbols.GlobalSymbolTable;
+import IC.Symbols.MethodSymbolTable;
+import IC.Symbols.StatementBlockSymbolTable;
+import IC.Symbols.Symbol;
+import IC.Symbols.SymbolKind;
+import IC.Symbols.SymbolTable;
+import IC.Symbols.SymbolTableException;
 
 public class SymbolTableBuilderVisitor implements Visitor {
 
 	private String programName;
 	private SymbolTypeTable typeTable;
 	private List<SemanticError> errors = new ArrayList<SemanticError>();
-	private static Logger logger = Logger
-			.getLogger(SymbolTableBuilderVisitor.class.getName());
 
 	public SymbolTableBuilderVisitor(String programName) {
 		this.programName = programName;
@@ -69,24 +73,26 @@ public class SymbolTableBuilderVisitor implements Visitor {
 				typeTable);
 		program.setGlobalSymbolTable(globalTable);
 
+		// Step 0: Look for circlualr inheritance
+		//try {
+			//checkIfHaveCircularInheritance(program.getClasses());
+		//} catch (SemanticError e) {
+			//errors.add(e);
+			//return globalTable;
+		//}
+
 		// Step 1: Go through the classes, and create a Symbol and a SymbolTable
 		// for each one.
 		Map<String, ClassSymbolTable> symbolTableForClass = new HashMap<String, ClassSymbolTable>();
 
 		for (ICClass clazz : program.getClasses()) {
 			Symbol classSymbol = new Symbol(clazz.getName(), SymbolKind.CLASS,
-					typeTable.getSymbolTypeId(clazz));
+					typeTable.getSymbolTypeId(clazz), clazz.getLine());
 
 			insertSymbolToTable(globalTable, clazz, classSymbol);
 
 			ClassSymbolTable classTable = (ClassSymbolTable) clazz.accept(this);
 			symbolTableForClass.put(clazz.getName(), classTable);
-		}
-
-		// Step 2: Set the parent for each class' symbol table:
-		for (ICClass clazz : program.getClasses()) {
-			ClassSymbolTable classTable = symbolTableForClass.get(clazz
-					.getName());
 			if (clazz.hasSuperClass()) {
 				// If the class has a base class, add the class' symbol table as
 				// a child at the base class' symbol table
@@ -102,12 +108,36 @@ public class SymbolTableBuilderVisitor implements Visitor {
 				}
 				typeTable.setSuperForClass(clazz);
 			} else {
-				// Base class doesn't have a base class.
+				// Class doesn't have a base class.
 				globalTable.addChild(classTable);
 			}
 		}
 
 		return globalTable;
+	}
+
+	private void checkIfHaveCircularInheritance(List<ICClass> classes)
+			throws SemanticError {
+		Map<String, String> classBases = new HashMap<String, String>();
+		for (ICClass clazz : classes) {
+			if (clazz.hasSuperClass()) {
+				classBases.put(clazz.getName(), clazz.getSuperClassName());
+			}
+		}
+		for (ICClass clazz : classes) {
+			String iter = clazz.getName();
+			while (classBases.containsKey(iter)) {
+				String iterBase = classBases.get(iter);
+				if (iterBase.equals(clazz.getName())) {
+					throw new SemanticError(
+							"Circular inheritance detected: class '"
+									+ clazz.getName() + "' <= class '" + iter
+									+ "' <= class '" + clazz.getName() + "'.",
+							clazz.getLine());
+				}
+				iter = iterBase;
+			}
+		}
 	}
 
 	private void insertSymbolToTable(SymbolTable table,
@@ -116,7 +146,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 			table.insert(newSymbol);
 		} catch (SymbolTableException e) {
 			errors.add(new SemanticError(e.getMessage(), declarationNode
-					.getLine(), newSymbol.name));
+					.getLine(), newSymbol.getName()));
 		}
 	}
 
@@ -128,7 +158,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 		for (Field field : icClass.getFields()) {
 			Symbol fieldSymbol = new Symbol(field.getName(), SymbolKind.FIELD,
 					typeTable.getSymbolTypeId(field.getType(), field.getType()
-							.getDimension()));
+							.getDimension()), field.getLine());
 			insertSymbolToTable(classTable, field, fieldSymbol);
 		}
 
@@ -137,11 +167,11 @@ public class SymbolTableBuilderVisitor implements Visitor {
 			if (method instanceof VirtualMethod) {
 				methodSymbol = new Symbol(method.getName(),
 						SymbolKind.VIRTUAL_METHOD,
-						typeTable.getSymbolTypeId(method));
+						typeTable.getSymbolTypeId(method), method.getLine());
 			} else { // method is a StaticMethod or a LibraryMethod)
 				methodSymbol = new Symbol(method.getName(),
 						SymbolKind.STATIC_METHOD,
-						typeTable.getSymbolTypeId(method));
+						typeTable.getSymbolTypeId(method), method.getLine());
 			}
 			MethodSymbolTable methodTable = (MethodSymbolTable) method
 					.accept(this);
@@ -168,7 +198,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 		for (Formal formal : method.getFormals()) {
 			Symbol symbol = new Symbol(formal.getName(), SymbolKind.PARAMETER,
 					typeTable.getSymbolTypeId(formal.getType(), formal
-							.getType().getDimension()));
+							.getType().getDimension()), formal.getLine());
 			insertSymbolToTable(table, formal, symbol);
 		}
 		getSymbolsAndChildTablesFromStatementList(table, method.getStatements());
@@ -321,7 +351,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 		Symbol symbol = new Symbol(localVariable.getName(),
 				SymbolKind.LOCAL_VARIABLE, typeTable.getSymbolTypeId(
 						localVariable.getType(), localVariable.getType()
-								.getDimension()));
+								.getDimension()), localVariable.getLine());
 		return new SymbolOrTables(symbol, localVariable);
 	}
 

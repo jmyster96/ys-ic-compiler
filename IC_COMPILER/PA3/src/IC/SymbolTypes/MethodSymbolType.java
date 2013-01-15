@@ -1,4 +1,4 @@
-package IC.Symbols;
+package IC.SymbolTypes;
 
 import java.util.ArrayList;
 import java.util.List;

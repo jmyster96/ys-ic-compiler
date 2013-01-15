@@ -5,18 +5,17 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Logger;
-
-import sun.util.logging.resources.logging;
 
 import IC.Parser.CourtesyErrorReporter;
-import IC.Semantic.SemanticError;
+import IC.SymbolTypes.SymbolTypeTable;
 
 public abstract class SymbolTable {
 	private SymbolTable parent;
 	private List<SymbolTable> children = new ArrayList<SymbolTable>();
 	private String name;
-	private Map<String, Symbol> symbols = new HashMap<String, Symbol>();
+	protected Map<String, Symbol> symbols = new HashMap<String, Symbol>();
+	// Used for typing
+	private List<Symbol> symbolsByOrder = new ArrayList<Symbol>();
 
 	private SymbolTypeTable typeTable;
 
@@ -32,6 +31,7 @@ public abstract class SymbolTable {
 							+ newSymbol.name);
 		}
 		symbols.put(newSymbol.name, newSymbol);
+		symbolsByOrder.add(newSymbol);
 	}
 
 	public Symbol lookup(String name) throws SymbolTableException {
@@ -71,14 +71,34 @@ public abstract class SymbolTable {
 		builder.append(getName());
 		builder.append("\n");
 
-		for (Map.Entry<String, Symbol> tableEntry : symbols.entrySet()) {
+		for (Symbol symbol : symbolsByOrder) {
 			builder.append("    ");
-			builder.append(tableEntry.getValue().kind);
+			builder.append(symbol.kind);
 			builder.append(": ");
-			builder.append(tableEntry.getKey());
-			builder.append(": ");
-			builder.append(this.getTypeTable().getSymbolById(
-					tableEntry.getValue().symbolTypeId));
+			switch (symbol.kind) {
+			case CLASS:
+				builder.append(symbol.name);
+				break;
+			case FIELD:
+			case LOCAL_VARIABLE:
+			case PARAMETER:
+				builder.append(this.getTypeTable().getSymbolById(
+						symbol.symbolTypeId));
+				builder.append(" ");
+				builder.append(symbol.name);
+
+				break;
+			case STATIC_METHOD:
+			case VIRTUAL_METHOD:
+				builder.append(symbol.name);
+				builder.append(" ");
+				builder.append(this.getTypeTable().getSymbolById(
+						symbol.symbolTypeId));
+				break;
+			default:
+				break;
+
+			}
 			builder.append("\n");
 		}
 		if (getChildren().size() > 0) {

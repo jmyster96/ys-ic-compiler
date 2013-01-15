@@ -20,5 +20,61 @@ class VariousChecks {
      a = ""; // Should be an error: a is an int.
      b = 5;  // Should be an error: b is a string.
      b = ""; // Should be ok.
+     
+     Super sup = new Sub();   // Should be ok
+     Super sup2 = new Super(); // OK
+     Sub sub = new Super();      // Not ok
+     Sub sub2 = new Sub(); // OK
+     
+     Sub[] arr = new Sub[5];   // OK
+     Super[] arr2 = new Sub["a"]; // NOT OK (two errors)
+     
+     int[][] matrix = new int[][arr.length];  // Should be ok
+     Super[][] arr3 = new Super[][b];  // Should not be ok;
+
+     int gg = a + "hi";   // Error
+     string hh = "hi" + "bye";    // OK
+     int kk = 1 + 2;   // ok
+     
   }
+}
+class A {}
+class B extends A {}
+
+class Super {
+  A methodAA(A arg1, int arg2) { return null; }
+  A methodAB(B arg1, int arg2) { return null; }
+  B methodBA(A arg1, int arg2) { return null; }
+  B methodBB(B arg1, int arg2) { return null; }
+  
+  int field1;
+  void methodInSuper(){}
+}
+
+class Sub extends Super {
+
+  // Should be OK: Returns more specialized, receives more general
+  B methodAB(A arg1, int arg2) { 
+    return null;
+  }
+
+  B methodAA(B arg1, int arg2) {   // Error: argument too specialized 
+    return null;
+  }
+
+  A methodBA(B arg1, int arg2) {    // Error: return too general AND arg too special
+    return null;
+  }
+  
+  B methodBB(A arg1, int arg2, string arg3) {}  // ERROR: Too many arguments
+ 
+  // int methodInSuper;
+  
+  string field1() {}
+  
+  static void staticBase() {
+    int inBounds = -2147483648;   // ok
+    inBounds = 2147483647;        // ok
+    int outOfBounds = 2147483648;  // error
+  } 
 }

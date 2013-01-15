@@ -1,0 +1,11 @@
+class List { int data; List next; }
+class Node { int data; Edge[] edges; }
+class Edge { int label; Node dest; }
+class Circular1 extends Circular4 {
+}
+class Circular2 extends Circular1 {
+}
+class Circular3 extends Circular2 {
+}
+class Circular4 extends Circular3 {
+}

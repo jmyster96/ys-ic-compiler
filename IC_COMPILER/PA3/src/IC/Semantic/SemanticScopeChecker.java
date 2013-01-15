@@ -7,14 +7,13 @@ import java.util.Stack;
 
 import IC.AST.*;
 import IC.Parser.CourtesyErrorReporter;
-import IC.Symbols.GlobalSymbolTable;
+import IC.SymbolTypes.SymbolType;
+import IC.Symbols.ClassSymbolTable;
 import IC.Symbols.MethodSymbolTable;
 import IC.Symbols.Symbol;
 import IC.Symbols.SymbolKind;
 import IC.Symbols.SymbolTable;
 import IC.Symbols.SymbolTableException;
-import IC.Symbols.SymbolType;
-import IC.Symbols.SymbolTypeTable;
 
 public class SemanticScopeChecker implements Visitor {
 
@@ -42,9 +41,8 @@ public class SemanticScopeChecker implements Visitor {
 		// and the current scope is a static scope, this will be identified
 		// here.
 		// BIG FIXME (maybe we won't do that): Instead of this hack, use
-		// instance
-		// scope and static scope as different symbol tables, as initially
-		// discussed.
+		// instance scope and static scope as different symbol tables, as
+		// initially discussed.
 		if (currentScopeIsStaticAndSymbolIsVirtualMethodOrField(symbol)) {
 			errors.add(new SemanticError(
 					"Trying to reference a non-static class member.", node
@@ -113,7 +111,25 @@ public class SemanticScopeChecker implements Visitor {
 	@Override
 	public Object visit(Field field) {
 		field.getType().accept(this);
+		verifyFieldDoesntHideBaseClassMember(field);
 		return true;
+	}
+
+	private void verifyFieldDoesntHideBaseClassMember(Field field) {
+		SymbolTable classScope = getCurrentScope();
+		try {
+			if (classScope.getParent() != null
+					&& classScope.getParent() instanceof ClassSymbolTable) {
+				Symbol inBase = classScope.getParent().lookup(field.getName());
+				SymbolType baseMemberType = classScope.getTypeTable()
+						.getSymbolById(inBase.getTypeId());
+				errors.add(new SemanticError("Field '" + field.getName()
+						+ "' hides base class member " + baseMemberType + " '"
+						+ inBase.getName() + "'", field.getLine()));
+			}
+		} catch (SymbolTableException e) {
+			// This means that symbol doesn't exist in base class. That's fine.
+		}
 	}
 
 	@Override

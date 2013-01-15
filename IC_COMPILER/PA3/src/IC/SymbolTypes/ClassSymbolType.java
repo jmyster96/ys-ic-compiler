@@ -1,8 +1,8 @@
-package IC.Symbols;
+package IC.SymbolTypes;
 
 public class ClassSymbolType extends SymbolType {
 
-	private static int NO_BASE_CLASS = -1;
+	public static int NO_BASE_CLASS = -1;
 
 	String name;
 	int baseClassTypeId = NO_BASE_CLASS;
@@ -22,11 +22,15 @@ public class ClassSymbolType extends SymbolType {
 	public String getName() {
 		return name;
 	}
-	
+
 	@Override
 	public String toString() {
-		return name
-				+ (hasBaseClass() ? ", Superclass ID: " + baseClassTypeId : "");
+		return name;
+	}
+
+	@Override
+	public String additionalStringData() {
+		return (hasBaseClass() ? ", Superclass ID: " + baseClassTypeId : "");
 	}
 
 	public String getHeader() {
@@ -38,12 +42,10 @@ public class ClassSymbolType extends SymbolType {
 		return 2;
 	}
 
-
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + baseClassTypeId;
 		result = prime * result + ((name == null) ? 0 : name.hashCode());
 		return result;
 	}
@@ -57,8 +59,6 @@ public class ClassSymbolType extends SymbolType {
 		if (getClass() != obj.getClass())
 			return false;
 		ClassSymbolType other = (ClassSymbolType) obj;
-		if (baseClassTypeId != other.baseClassTypeId)
-			return false;
 		if (name == null) {
 			if (other.name != null)
 				return false;
@@ -70,5 +70,9 @@ public class ClassSymbolType extends SymbolType {
 	@Override
 	public boolean isReferenceType() {
 		return true;
+	}
+
+	public int getBaseClassTypeId() {
+		return baseClassTypeId;
 	}
 }

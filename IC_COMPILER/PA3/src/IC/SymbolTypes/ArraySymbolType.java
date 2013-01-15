@@ -1,24 +1,16 @@
-package IC.Symbols;
+package IC.SymbolTypes;
 
 public class ArraySymbolType extends SymbolType {
 
 	SymbolType baseType;
 
-	// int dimension;
-
 	public ArraySymbolType(SymbolType baseType) {
 		this.baseType = baseType;
-		// this.dimension = dimension;
 	}
 
 	@Override
 	public String toString() {
-		StringBuilder builder = new StringBuilder();
-		builder.append(baseType);
-		// for (int i = 0; i < dimension; ++i) {
-		builder.append("[]");
-		// }
-		return builder.toString();
+		return baseType + "[]";
 	}
 
 	@Override
@@ -35,8 +27,6 @@ public class ArraySymbolType extends SymbolType {
 				return false;
 		} else if (!baseType.equals(other.baseType))
 			return false;
-		// if (dimension != other.dimension)
-		// return false;
 		return true;
 	}
 
@@ -46,7 +36,6 @@ public class ArraySymbolType extends SymbolType {
 		int result = 1;
 		result = prime * result
 				+ ((baseType == null) ? 0 : baseType.hashCode());
-		// result = prime * result + dimension;
 		return result;
 	}
 

@@ -13,6 +13,8 @@ public class Literal extends Expression {
 
 	private Object value;
 
+	private boolean parentIsUMinus;
+
 	public Object accept(Visitor visitor) {
 		return visitor.visit(this);
 	}
@@ -57,6 +59,18 @@ public class Literal extends Expression {
 
 	public Object getValue() {
 		return value;
+	}
+
+	public void setValue(Integer value) {
+		this.value = value;
+	}
+
+	public void yourParentIsUMinus() {
+		this.parentIsUMinus = true;
+	}
+
+	public boolean isParentUMinus() {
+		return parentIsUMinus;
 	}
 
 }
