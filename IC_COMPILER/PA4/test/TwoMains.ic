@@ -1,0 +1,18 @@
+class A {
+  // This class has a bad main function.
+  static void main(string[] args) {
+    // Do nothing
+  }
+}
+class B {
+  // This class has a bad main function.
+  static void main(string[] args) {
+    // Do nothing
+  }
+}
+class ClassHasMain {
+  // This class has a bad main function.
+  static void main(string[] args) {
+    // Do nothing
+  }
+}

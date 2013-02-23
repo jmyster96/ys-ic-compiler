@@ -1,0 +1,116 @@
+_________________________________
+Compilation project documentation
+Exercise 3
+=================================
+
+Summary: In this exercise we implemented semantic analysis for the IC language, 
+including symbol table construction.
+
+_______
+CLASSES
+
+New in this PA:
+
+package IC:
+
+> Compiler.java -
+     Now runs the semantic checks. It first adds the Library class as a
+     class in the program.
+     
+     Then it runs the different semantic checkers one by one:
+
+package IC.Semantic:
+     1. SymbolTableBuilderVisitor:
+        Traverses the AST once, builds the Symbol Table and the Type Table.
+     2. SemanticScopeChecker
+        Traverses the AST a second time, checks that every symbol used is defined
+        earlier.
+     3. TypeCheckingVisitor
+        Traverses the AST, checks all of the different type rules.
+     4. SingleMainFunctionValidator
+     5. BreakContinueAndThisValidator
+     
+package IC.Symbols:
+  Symbol
+  SymbolKind
+  SymbolTable
+     \-- GlobalSymbolTable
+     \-- ClassSymbolTable
+     \-- MethodSymbolTable
+     \-- StatementBlockSymbolTable
+  SymbolTableException
+  
+package IC.SymbolTypes:
+  SymbolType
+     \-- PrimitiveSymbolType
+     \-- ClassSymbolType
+     \-- ArraySymbolType
+     \-- MethodSymbolType
+  SymbolTypeTable
+
+________________
+TESTING STRATEGY
+
+(Almost) every rule that was implemented was accompanied with a relevant test.
+See PA3/test/*.ic for the tests.
+
+Since each step in the semantic checks can produce multiple error messages, a simple
+test file can cover lots of different cases.
+
+Especially see TypeChecks.ic.
+
+_______________
+ERROR REPORTING
+
+For each semantic error, we try to show some informative info: exactly what happened,
+and what were the involved types.
+
+Additionally, each semantic checks accumulates as many errors. The compiler prints them
+to the user.
+
+_____________________________
+DESIGN/IMPLEMENTATION CHOICES (not all of are good in retrospect)
+
+1. We didn't add a reference to the enclosing Symbol Table from each AST Node.
+   Instead, while traversing the AST, we keep track of what is the current enclosing
+   scope.
+   
+   The thought was that we don't want to touch the 'pure' AST that belong to the
+   step. 
+   
+   This has proven to be a bad design choice, and it caused some ugly code later on.
+   It will have to be changed for the next PA.
+
+2. Static scope / Instance scope is kind of hackish too: it is not kept by actually
+   using different SymbolTables. Instead, the case of trying to access a virtual method
+   or an instance field from inside a static method is explicitly handled.
+   
+3. Integer bounds checking is hackish: to allow -2147483648 it checks if the parent is the parent is UMinus.
+   It's hard to do any better without constant folding.
+   
+4. Each step of the semantic checks (almost) is done in its own Visitor.
+   PropagatingVisitor was implemented too late. Some of the visitors should've been
+   propagating.
+
+5. There's a Scope checker and a Type checker. Sometimes it's hard to tell if
+   a certain issue is a 'scope' issue or a 'type' issue. Rule of thumb: if a certain
+   semantic check requires only the symbol's kind but not its type, it's in the Scope
+   checker.
+   Anyway, they could've been merged. And their result could've been stored in the
+   decorated AST.
+   
+6. Main function validator is implemented in an AST visitor. It should've been checked
+   on the symbol table (that was though of only after the symbol table was built). 
+   
+7. Sometimes, because of the 'error recovery', more than one error can be triggered for
+   a line.
+   
+   For example, take the line
+       int gg = a + "hi";
+   The first type error is caused by the INT PLUS STRING.
+   The type checker prints this error, and then returns a 'null' type for the + 
+   operation.
+   Later, it says that 'null' cannot be cast to 'int'.
+   
+   This could've been prevented by using a special 'unknown' type that won't cause 
+   type errors later on.

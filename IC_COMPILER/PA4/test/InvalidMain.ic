@@ -1,0 +1,6 @@
+class A {
+  // This class has a bad main function.
+  static int main(A[] args) {
+    return 5;
+  }
+}

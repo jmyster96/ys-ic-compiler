@@ -1,0 +1,20 @@
+class BonusCase2 {
+  void method() {
+    if (cond1)
+      if (blah == blih)
+        x = 5;
+      else
+        x = 3;
+
+    if (cond2)
+      if (blah == blih)
+        x = 5;
+      else
+        x = 3;
+    else
+      int a = 7;  // <-- This should be a syntax error
+      // a = 7;
+  }
+  int [] a;
+  // int [a]; // Syntax error
+}

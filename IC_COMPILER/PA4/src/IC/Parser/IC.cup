@@ -1,0 +1,456 @@
+package IC.Parser;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import java_cup.runtime.*;
+
+import IC.BinaryOps;
+import IC.DataTypes;
+import IC.LiteralTypes;
+import IC.UnaryOps;
+import IC.AST.*;
+
+
+parser code {:
+  private Lexer lexer;
+  List<String> errorMessages = new ArrayList<String>();
+
+  public Parser(Lexer lexer) {
+    super(lexer);
+    this.lexer = lexer;
+  }
+
+  public int getLine() {
+    return lexer.getLineNumber();
+  }
+
+  public void report_error(String message, Object info) {
+    if (info instanceof Token) {
+      Token tok = (Token) info;
+
+      String errorMessage = "Line " + tok.getLine() + ": " + message + "; unexpected " + tok;
+      
+      // In many cases only a few actions would have gotten us out of this error.
+      // In those cases, we'd like to print what the expected tokens were.
+      List<String> possibleActions = getPossibleActions();
+      if (possibleActions.size() > 0 && possibleActions.size() <= 5) {
+        errorMessage += "; expected one of: " + CourtesyErrorReporter.joinStrings(possibleActions);
+      }
+      errorMessages.add(errorMessage);
+
+      // In addition, there are some special cases that we inspect the stack and provide a relevant error
+      // message to the user.
+      String additionalError = CourtesyErrorReporter.tryAnalyzeError(tok, this.stack);
+      if (additionalError != null) {
+        errorMessages.add(additionalError);
+      }
+    } else {
+      errorMessages.add(message);
+    }
+  }
+  
+  public void report_fatal_error(String message, Object info) throws SyntaxError {
+    // Stop parsing (not really necessary since we throw an exception, but)
+    // (Taken from super, see http://www.docjar.org/html/api/java_cup/runtime/lr_parser.java.html)
+    done_parsing();
+
+    String realMessage = "Can't recover from previous error(s):\n" +
+        CourtesyErrorReporter.joinStrings(errorMessages, "\n");
+
+    if (info instanceof Token) {
+      Token tok = (Token) info;
+      throw new SyntaxError(realMessage, tok.getLine());
+    }
+    
+    throw new SyntaxError(realMessage);
+  }
+  
+  private List<String> getPossibleActions() {
+    // Goes through all of the possible symbols, and sees if one of them
+    // would've resulted in a SHIFT or a REDUCE operation (action != 0).
+    List<String> possibleActions = new ArrayList<String>();
+    if (stack.empty()) return possibleActions;
+    for (Integer possibleSym : symNameGetter.getPossibleSymbols()) {
+      short action = get_action(((Symbol)this.stack.peek()).parse_state, possibleSym);
+      if (action != 0) {
+        possibleActions.add(symNameGetter.getSymbolName(possibleSym));
+      }
+    }
+    return possibleActions;
+  }
+:};
+
+scan with {: return lexer.next_token(); :};
+
+////////////////////////////////////////////
+// Symbol list (terminals and non-terminals)
+
+// Punctuation marks
+terminal LP, RP, LB, RB, LCBR, RCBR, SEMI, DOT, COMMA;
+// Keywords
+terminal CLASS, EXTENDS, STATIC, VOID, INT, BOOLEAN, STRING, RETURN;
+terminal IF, ELSE, WHILE, BREAK, CONTINUE, THIS, NEW, LENGTH, TRUE, FALSE, NULL;
+
+// Stuff that have text in them
+// Decision: Conversion to Integer will be done NOT here.
+terminal String ID, CLASS_ID, INTEGER, QUOTE;
+
+// Assignment operator
+terminal ASSIGN;
+
+// Boolean operators
+terminal EQUAL, NEQUAL, LT, GT, LTE, GTE;
+
+// Binary operators
+terminal BinaryOps PLUS, MINUS, MULTIPLY, DIVIDE, MOD;
+
+// Unary operators
+terminal UnaryOps UMINUS, LNEG;
+
+// Conditional operators
+terminal LAND, LOR;
+
+non terminal Program program;
+non terminal ICClass class;
+non terminal List<ICClass> class_list;
+non terminal ClassMembersHelper fields_or_methods;
+non terminal List<Field> fields;
+non terminal Method method;
+non terminal Type type;
+non terminal List<Formal> formals;
+non terminal Formal formal;
+non terminal List<Statement> statement_list;
+non terminal Statement statement, decl_statement, action_statement;
+non terminal List<String> id_list;
+non terminal Expression expression;
+non terminal Location location;
+non terminal BinaryOp binop;
+non terminal UnaryOp unop;
+non terminal Literal literal;
+non terminal Call call;
+non terminal StaticCall static_call;
+non terminal VirtualCall virtual_call;
+non terminal List<Expression> arg_list;
+
+//////////////////////////
+// Precedence declarations
+
+precedence left ASSIGN;
+precedence left LOR;
+precedence left LAND;
+precedence left EQUAL, NEQUAL;
+precedence left LT, LTE, GT, GTE;
+precedence left PLUS, MINUS;
+precedence left MULTIPLY, DIVIDE, MOD;
+precedence right UMINUS, LNEG;
+precedence left LB, RB, LP, RP;
+precedence left DOT;
+
+
+// Fix the dangling else problem
+precedence right ELSE;
+
+
+
+//////////////
+// The grammar
+
+program ::= class_list:cl
+            {: RESULT = new Program(cl); :}
+            ;
+
+class_list ::= {: RESULT = new ArrayList<ICClass>(); :}
+               |
+               class_list:cl class:c
+               {: cl.add(c);
+                  RESULT = cl;
+               :}
+               ;
+
+class ::= CLASS CLASS_ID:cid LCBR fields_or_methods:fom RCBR
+          {: RESULT = new ICClass(cidleft, cid, fom.getFields(), fom.getMethods()); :}
+          |
+          CLASS CLASS_ID:cid EXTENDS CLASS_ID:superid LCBR fields_or_methods:fom RCBR
+          {: RESULT = new ICClass(cidleft, cid, superid, fom.getFields(), fom.getMethods()); :}
+          ;
+
+fields_or_methods ::= {: RESULT = new ClassMembersHelper(); :}
+                      |
+                      fields_or_methods:classmembers fields:fields
+                      {: for (Field field : fields) {
+                           classmembers.add(field);
+                         }
+                         RESULT = classmembers;
+                      :}
+                      |
+                      fields_or_methods:classmembers method:method
+                      {: classmembers.add(method);
+                         RESULT = classmembers;
+                      :}
+                      ;
+
+fields ::= type:t id_list:names SEMI
+           {: List<Field> list = new ArrayList<Field>();
+              for (String name : names) {
+                list.add(new Field(t, name));
+              }
+              RESULT = list;
+           :}
+           ;
+
+id_list ::= ID:id
+            {: List<String> ids = new ArrayList<String>();
+               ids.add(id);
+               RESULT = ids;
+            :}
+            |
+            id_list:ids COMMA ID:id
+            {: ids.add(id);
+               RESULT = ids;
+            :}
+            ;
+
+method ::= type:t ID:name LP formals:f RP LCBR statement_list:s RCBR
+           {: RESULT = new VirtualMethod(t, name, f, s); :}
+           |
+           VOID:t ID:name LP formals:f RP LCBR statement_list:s RCBR
+           {: Type voidType = new PrimitiveType(tleft, DataTypes.VOID);
+              RESULT = new VirtualMethod(voidType, name, f, s);
+           :}
+           |
+           STATIC type:t ID:name LP formals:f RP LCBR statement_list:s RCBR
+           {: RESULT = new StaticMethod(t, name, f, s); :}
+           |
+           STATIC VOID:t ID:name LP formals:f RP LCBR statement_list:s RCBR
+           {: Type voidType = new PrimitiveType(tleft, DataTypes.VOID);
+              RESULT = new StaticMethod(voidType, name, f, s);
+           :}
+           ;
+
+formals ::= {: RESULT = new ArrayList<Formal>(); :}
+            |
+            formal:formal
+            {: List<Formal> formals = new ArrayList<Formal>();
+               formals.add(formal);
+               RESULT = formals;
+            :}
+            |
+            formals:formals COMMA formal:formal
+            {: formals.add(formal);
+               RESULT = formals;
+            :}
+            ;
+
+formal ::= type:type ID:id
+           {: RESULT = new Formal(type, id); :}
+           ;
+
+type ::= INT:t
+         {: RESULT = new PrimitiveType(tleft, DataTypes.INT); :}
+         |
+         BOOLEAN:t
+         {: RESULT = new PrimitiveType(tleft, DataTypes.BOOLEAN); :}
+         |
+         STRING:t
+         {: RESULT = new PrimitiveType(tleft, DataTypes.STRING); :}
+         |
+         CLASS_ID:name {: RESULT = new UserType(nameleft, name); :}
+         |
+         type:t LB RB
+         {: t.incrementDimension();
+            RESULT = t;
+         :}
+         ;
+
+statement_list ::= {: RESULT = new ArrayList<Statement>(); :}
+                   |
+                   statement_list:statement_list statement:statement
+                   {: statement_list.add(statement);
+                      RESULT = statement_list;
+                   :}
+                   ;
+
+statement ::= decl_statement:statement
+              {: RESULT = statement; :}
+              |
+              action_statement:statement
+              {: RESULT = statement; :}
+              ;
+
+action_statement ::= location:variable ASSIGN expression:expression SEMI
+                     {: RESULT = new Assignment(variable, expression); :}
+                     |
+                     call:call SEMI
+                     {: RESULT = new CallStatement(call); :}
+                     |
+                     RETURN:r SEMI
+                     {: RESULT = new Return(rleft); :}
+                     |
+                     RETURN:r expression:expression SEMI
+                     {: RESULT = new Return(rleft, expression); :}
+                     |
+                     IF LP expression:condition RP action_statement:operation
+                     {: RESULT = new If(condition, operation); :}
+                     |
+                     IF LP expression:condition RP action_statement:operation ELSE action_statement:elseOperation
+                     {: RESULT = new If(condition, operation, elseOperation); :}
+                     |
+                     WHILE LP expression:condition RP action_statement:operation
+                     {: RESULT = new While(condition, operation); :}
+                     |
+                     BREAK:b SEMI
+                     {: RESULT = new Break(bleft); :}
+                     |
+                     CONTINUE:c SEMI
+                     {: RESULT = new Continue(cleft); :}
+                     |
+                     LCBR:begin statement_list:statements RCBR
+                     {: RESULT = new StatementsBlock(beginleft, statements); :}
+                     ;
+
+decl_statement ::= type:type ID:name SEMI
+                   {: RESULT = new LocalVariable(type, name); :}
+                   |
+                   type:type ID:name ASSIGN expression:initValue SEMI
+                   {: RESULT = new LocalVariable(type, name, initValue); :}
+                   ;
+
+expression ::= location:location
+               {: RESULT = location; :}
+               |
+               call:call
+               {: RESULT = call; :}
+               |
+               THIS:t
+               {: RESULT = new This(tleft); :}
+               |
+               NEW:n CLASS_ID:name LP RP
+               {: RESULT = new NewClass(nleft, name); :}
+               |
+               NEW type:type LB expression:size RB
+               {: RESULT = new NewArray(type, size); :}
+               |
+               expression:array DOT LENGTH
+               {: RESULT = new Length(array); :}
+               |
+               binop:binop
+               {: RESULT = binop; :}
+               |
+               unop:unop
+               {: RESULT = unop; :}
+               |
+               literal:literal
+               {: RESULT = literal; :}
+               |
+               LP expression:expression RP
+               {: RESULT = new ExpressionBlock(expression); :}
+               ;
+
+call ::= static_call:call
+         {: RESULT = call; :}
+         |
+         virtual_call:call
+         {: RESULT = call; :}
+         ;
+
+static_call ::= CLASS_ID:className DOT ID:name LP arg_list:arguments RP
+                {: RESULT = new StaticCall(classNameleft, className, name, arguments); :}
+                ;
+
+virtual_call ::= ID:name LP arg_list:arguments RP
+                 {: RESULT = new VirtualCall(nameleft, name, arguments); :}
+                 |
+                 expression:location DOT ID:name LP arg_list:arguments RP
+                 {: RESULT = new VirtualCall(locationleft, location, name, arguments); :}
+                 ;
+
+arg_list ::= {: RESULT = new ArrayList<Expression>(); :}
+             |
+             expression:arg
+             {: List<Expression> arg_list = new ArrayList<Expression>();
+                arg_list.add(arg);
+                RESULT = arg_list;
+             :}
+             |
+             arg_list:arg_list COMMA expression:arg
+             {: arg_list.add(arg);
+                RESULT = arg_list;
+             :}
+             ;
+
+location ::= ID:name
+             {: RESULT = new VariableLocation(nameleft, name); :}
+             |
+             expression:location DOT ID:name
+             {: RESULT = new VariableLocation(nameleft, location, name); :}
+             |
+             expression:array LB expression:index RB
+             {: RESULT = new ArrayLocation(array, index); :}
+             ;
+
+binop ::= expression:operand1 PLUS expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.PLUS, operand2); :}
+          |
+          expression:operand1 MINUS expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.MINUS, operand2); :}
+          |
+          expression:operand1 MULTIPLY expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.MULTIPLY, operand2); :}
+          |
+          expression:operand1 DIVIDE expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.DIVIDE, operand2); :}
+          |
+          expression:operand1 MOD expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.MOD, operand2); :}
+          |
+          expression:operand1 LT expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.LT, operand2); :}
+          |
+          expression:operand1 LTE expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.LTE, operand2); :}
+          |
+          expression:operand1 GT expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.GT, operand2); :}
+          |
+          expression:operand1 GTE expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.GTE, operand2); :}
+          |
+          expression:operand1 EQUAL expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.EQUAL, operand2); :}
+          |
+          expression:operand1 NEQUAL expression:operand2
+          {: RESULT = new MathBinaryOp(operand1, BinaryOps.NEQUAL, operand2); :}
+          |
+          expression:operand1 LAND expression:operand2
+          {: RESULT = new LogicalBinaryOp(operand1, BinaryOps.LAND, operand2); :}
+          |
+          expression:operand1 LOR expression:operand2
+          {: RESULT = new LogicalBinaryOp(operand1, BinaryOps.LOR, operand2); :}
+          ;
+
+unop ::= MINUS expression:operand
+         {: RESULT = new MathUnaryOp(UnaryOps.UMINUS, operand); :}
+         %prec UMINUS
+         |
+         LNEG expression:operand
+         {: RESULT = new LogicalUnaryOp(UnaryOps.LNEG, operand); :}
+         ;
+
+literal ::= INTEGER:i
+            {: RESULT = new Literal(ileft, LiteralTypes.INTEGER, i); :}
+            |
+            QUOTE:q
+            {: String qvalue = LiteralParser.parseString(qleft, q);
+               RESULT = new Literal(qleft, LiteralTypes.STRING, qvalue); :}
+            |
+            TRUE:t
+            {: RESULT = new Literal(tleft, LiteralTypes.TRUE); :}
+            |
+            FALSE:f
+            {: RESULT = new Literal(fleft, LiteralTypes.FALSE); :}
+            |
+            NULL:v
+            {: RESULT = new Literal(vleft, LiteralTypes.NULL); :}
+            ;
