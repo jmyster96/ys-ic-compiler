@@ -76,5 +76,16 @@ class Sub extends Super {
     int inBounds = -2147483648;   // ok
     inBounds = 2147483647;        // ok
     int outOfBounds = 2147483648;  // error
+    Sub a = this;
+    return;
   } 
+}
+class IllegalHidingSuper {
+  int a;
+  int b() {}
+  int stat() {}
+}
+class IllegalHidingSub extends IllegalHidingSuper {
+  int b(int withArg) { return;}
+  static int stat() {} // ERROR
 }

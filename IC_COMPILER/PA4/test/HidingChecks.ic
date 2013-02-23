@@ -1,0 +1,10 @@
+class IllegalHidingSuper {
+  int a;
+  int b() {}
+  static int stat() {}
+}
+class IllegalHidingSub extends IllegalHidingSuper {
+  //int a;
+  int b(int withArg) { }
+  int stat() {} // ERROR
+}

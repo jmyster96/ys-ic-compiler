@@ -29,9 +29,10 @@ public class SemanticScopeChecker implements Visitor {
 
 	private boolean verifySymbolIsOfKind(ASTNode node, String name,
 			SymbolKind... kinds) {
+		setEnclosingScope(node);
 		Symbol symbol;
 		try {
-			symbol = getCurrentScope().lookup(name);
+			symbol = node.getEnclosingScope().lookup(name);
 		} catch (SymbolTableException e) {
 			errors.add(new SemanticError(e.getMessage(), node.getLine()));
 			return false;
@@ -43,7 +44,7 @@ public class SemanticScopeChecker implements Visitor {
 		// BIG FIXME (maybe we won't do that): Instead of this hack, use
 		// instance scope and static scope as different symbol tables, as
 		// initially discussed.
-		if (currentScopeIsStaticAndSymbolIsVirtualMethodOrField(symbol)) {
+		if (currentScopeIsStaticAndSymbolIsVirtualMethodOrField(node, symbol)) {
 			errors.add(new SemanticError(
 					"Trying to reference a non-static class member.", node
 							.getLine()));
@@ -54,9 +55,10 @@ public class SemanticScopeChecker implements Visitor {
 
 	private boolean verifySymbolInOtherScopeIsOfKind(String otherScopeName,
 			String symbolName, ASTNode node, SymbolKind... kinds) {
+		setEnclosingScope(node);
 		Symbol symbol;
 		try {
-			SymbolTable otherScope = getCurrentScope().lookupScope(
+			SymbolTable otherScope = node.getEnclosingScope().lookupScope(
 					otherScopeName);
 			symbol = otherScope.lookup(symbolName);
 		} catch (SymbolTableException e) {
@@ -78,8 +80,9 @@ public class SemanticScopeChecker implements Visitor {
 		return true;
 	}
 
-	private SymbolTable getCurrentScope() {
-		return symScopeStack.peek();
+	private void setEnclosingScope(ASTNode node) {
+		SymbolTable scope = symScopeStack.peek();
+		node.setEnclosingScope(scope);
 	}
 
 	/*
@@ -88,7 +91,7 @@ public class SemanticScopeChecker implements Visitor {
 	@Override
 	public Object visit(Program program) {
 		// recursive call to class
-		symScopeStack.push(program.getGlobalSymbolTable());
+		symScopeStack.push(program.getEnclosingScope());
 		for (ICClass clazz : program.getClasses()) {
 			clazz.accept(this);
 		}
@@ -97,7 +100,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(ICClass clazz) {
-		symScopeStack.push(clazz.getClassSymbolTable());
+		symScopeStack.push(clazz.getEnclosingScope());
 		for (Method meth : clazz.getMethods()) {
 			meth.accept(this);
 		}
@@ -110,13 +113,15 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(Field field) {
+		setEnclosingScope(field);
 		field.getType().accept(this);
 		verifyFieldDoesntHideBaseClassMember(field);
 		return true;
 	}
 
 	private void verifyFieldDoesntHideBaseClassMember(Field field) {
-		SymbolTable classScope = getCurrentScope();
+		setEnclosingScope(field);
+		SymbolTable classScope = field.getEnclosingScope();
 		try {
 			if (classScope.getParent() != null
 					&& classScope.getParent() instanceof ClassSymbolTable) {
@@ -151,7 +156,7 @@ public class SemanticScopeChecker implements Visitor {
 	}
 
 	private void visitMethod(Method method) {
-		symScopeStack.push(method.getMethodSymbolTable());
+		symScopeStack.push(method.getEnclosingScope());
 		for (Formal foraml : method.getFormals()) {
 			foraml.accept(this);
 		}
@@ -164,6 +169,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(Formal formal) {
+		setEnclosingScope(formal);
 		formal.getType().accept(this);
 		/*
 		 * validation that formal.getType() can be sent to function should be
@@ -174,18 +180,21 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(PrimitiveType type) {
+		setEnclosingScope(type);
 		// always defined
 		return true;
 	}
 
 	@Override
 	public Object visit(UserType type) {
+		setEnclosingScope(type);
 		verifySymbolIsOfKind(type, type.getName(), SymbolKind.CLASS);
 		return true;
 	}
 
 	@Override
 	public Object visit(Assignment assignment) {
+		setEnclosingScope(assignment);
 		assignment.getAssignment().accept(this);
 		assignment.getVariable().accept(this);
 		// FIXME: type check: validate that assignment type is compatible to
@@ -195,12 +204,14 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(CallStatement callStatement) {
+		setEnclosingScope(callStatement);
 		callStatement.getCall().accept(this);
 		return true;
 	}
 
 	@Override
 	public Object visit(Return returnStatement) {
+		setEnclosingScope(returnStatement);
 		if (returnStatement.hasValue()) {
 			returnStatement.getValue().accept(this);
 		}
@@ -209,6 +220,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(If ifStatement) {
+		setEnclosingScope(ifStatement);
 		ifStatement.getCondition().accept(this);
 		ifStatement.getOperation().accept(this);
 		if (ifStatement.hasElse()) {
@@ -219,6 +231,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(While whileStatement) {
+		setEnclosingScope(whileStatement);
 		whileStatement.getCondition().accept(this);
 		whileStatement.getOperation().accept(this);
 		return true;
@@ -226,17 +239,19 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(Break breakStatement) {
+		setEnclosingScope(breakStatement);
 		return true;
 	}
 
 	@Override
 	public Object visit(Continue continueStatement) {
+		setEnclosingScope(continueStatement);
 		return true;
 	}
 
 	@Override
 	public Object visit(StatementsBlock statementsBlock) {
-		symScopeStack.push(statementsBlock.getStatementsBlockSymbolTable());
+		symScopeStack.push(statementsBlock.getEnclosingScope());
 		for (Statement stmt : statementsBlock.getStatements()) {
 			stmt.accept(this);
 		}
@@ -246,6 +261,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(LocalVariable localVariable) {
+		setEnclosingScope(localVariable);
 		localVariable.getType().accept(this);
 		if (localVariable.hasInitValue()) {
 			localVariable.getInitValue().accept(this);
@@ -255,6 +271,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(VariableLocation location) {
+		setEnclosingScope(location);
 		if (location.isExternal()) {
 			location.getLocation().accept(this);
 		} else {
@@ -268,6 +285,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(ArrayLocation location) {
+		setEnclosingScope(location);
 		location.getIndex().accept(this);
 		location.getArray().accept(this);
 		return true;
@@ -275,6 +293,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(StaticCall call) {
+		setEnclosingScope(call);
 		for (Expression arg : call.getArguments()) {
 			arg.accept(this);
 		}
@@ -288,6 +307,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(VirtualCall call) {
+		setEnclosingScope(call);
 		for (Expression arg : call.getArguments()) {
 			arg.accept(this);
 		}
@@ -313,18 +333,21 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(This thisExpression) {
+		setEnclosingScope(thisExpression);
 		// Shouldn't be called
 		return true;
 	}
 
 	@Override
 	public Object visit(NewClass newClass) {
+		setEnclosingScope(newClass);
 		verifySymbolIsOfKind(newClass, newClass.getName(), SymbolKind.CLASS);
 		return true;
 	}
 
 	@Override
 	public Object visit(NewArray newArray) {
+		setEnclosingScope(newArray);
 		newArray.getSize().accept(this);
 		newArray.getType().accept(this);
 		return true;
@@ -332,12 +355,14 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(Length length) {
+		setEnclosingScope(length);
 		length.getArray().accept(this);
 		return true;
 	}
 
 	@Override
 	public Object visit(MathBinaryOp binaryOp) {
+		setEnclosingScope(binaryOp);
 		binaryOp.getFirstOperand().accept(this);
 		binaryOp.getSecondOperand().accept(this);
 		return true;
@@ -345,6 +370,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(LogicalBinaryOp binaryOp) {
+		setEnclosingScope(binaryOp);
 		binaryOp.getFirstOperand().accept(this);
 		binaryOp.getSecondOperand().accept(this);
 		// FIXME: need to validate that these are a part can be up casted to the
@@ -356,6 +382,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(MathUnaryOp unaryOp) {
+		setEnclosingScope(unaryOp);
 		unaryOp.getOperand().accept(this);
 		// FIXME: need to validate that these are a part can be up casted to the
 		// specific operation types
@@ -365,6 +392,7 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(LogicalUnaryOp unaryOp) {
+		setEnclosingScope(unaryOp);
 		unaryOp.getOperand().accept(this);
 		// FIXME: need to validate that these are a part can be up casted to the
 		// specific operation types
@@ -374,11 +402,13 @@ public class SemanticScopeChecker implements Visitor {
 
 	@Override
 	public Object visit(Literal literal) {
+		setEnclosingScope(literal);
 		return true;
 	}
 
 	@Override
 	public Object visit(ExpressionBlock expressionBlock) {
+		setEnclosingScope(expressionBlock);
 		expressionBlock.getExpression().accept(this);
 		return true;
 	}
@@ -389,10 +419,10 @@ public class SemanticScopeChecker implements Visitor {
 	 * been made from the static-scope.
 	 */
 	private boolean currentScopeIsStaticAndSymbolIsVirtualMethodOrField(
-			Symbol symbol) {
+			ASTNode node, Symbol symbol) {
 		Symbol scopeSymbol;
 		try {
-			scopeSymbol = findClosestEnclosingMethodScope();
+			scopeSymbol = findClosestEnclosingMethodScope(node);
 		} catch (SymbolTableException e) {
 			return false;
 		}
@@ -403,21 +433,21 @@ public class SemanticScopeChecker implements Visitor {
 		return currentScopeIsStatic && symbolIsNonStaticClassMember;
 	}
 
-	private Symbol findClosestEnclosingMethodScope()
+	private Symbol findClosestEnclosingMethodScope(ASTNode node)
 			throws SymbolTableException {
-		SymbolTable scope = getCurrentScope();
+		SymbolTable scope = node.getEnclosingScope();
 		while (scope != null && !(scope instanceof MethodSymbolTable)) {
 			scope = scope.getParent();
 		}
 		if (scope == null) {
 			return null;
 		}
-		return getScopeSymbolInEnclosingScope(scope);
+		return getScopeSymbolInEnclosingScope(node, scope);
 	}
 
-	private Symbol getScopeSymbolInEnclosingScope(SymbolTable scope)
-			throws SymbolTableException {
-		return getCurrentScope().getParent().lookup(scope.getName());
+	private Symbol getScopeSymbolInEnclosingScope(ASTNode node,
+			SymbolTable scope) throws SymbolTableException {
+		return node.getEnclosingScope().getParent().lookup(scope.getName());
 	}
 
 }

@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import IC.AST.ASTNode;
 import IC.Parser.CourtesyErrorReporter;
 import IC.SymbolTypes.SymbolTypeTable;
 
@@ -18,9 +19,11 @@ public abstract class SymbolTable {
 	private List<Symbol> symbolsByOrder = new ArrayList<Symbol>();
 
 	private SymbolTypeTable typeTable;
+	private final ASTNode releventAstNode;
 
-	public SymbolTable(String name, SymbolTypeTable typeTable) {
+	public SymbolTable(String name, ASTNode relevantAstNode, SymbolTypeTable typeTable) {
 		this.name = name;
+		this.releventAstNode = relevantAstNode;
 		this.typeTable = typeTable;
 	}
 
@@ -147,5 +150,9 @@ public abstract class SymbolTable {
 
 	public SymbolTable getParent() {
 		return parent;
+	}
+
+	public ASTNode getReleventAstNode() {
+		return releventAstNode;
 	}
 }

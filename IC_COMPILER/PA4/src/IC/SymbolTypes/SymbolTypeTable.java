@@ -44,8 +44,8 @@ public class SymbolTypeTable {
 		return addOrGetSymbolTypeId(createSymbolType(type, dimension));
 	}
 
-	public int getSymbolTypeId(Method method) {
-		return addOrGetSymbolTypeId(createSymbolType(method));
+	public int getSymbolTypeId(boolean isStatic, Method method) {
+		return addOrGetSymbolTypeId(createSymbolType(isStatic, method));
 	}
 
 	public int getSymbolTypeId(ICClass clazz) {
@@ -68,7 +68,7 @@ public class SymbolTypeTable {
 		return symbolTypes.size();
 	}
 
-	private SymbolType createSymbolType(Method method) {
+	private SymbolType createSymbolType(boolean isStatic, Method method) {
 		// Create types for formals
 		List<SymbolType> formalsTypes = new ArrayList<SymbolType>();
 		for (Formal formal : method.getFormals()) {
@@ -79,7 +79,7 @@ public class SymbolTypeTable {
 		SymbolType returnType = getSymbolById(getSymbolTypeId(method.getType(),
 				method.getType().getDimension()));
 		// Create type for method
-		return new MethodSymbolType(formalsTypes, returnType);
+		return new MethodSymbolType(isStatic, formalsTypes, returnType);
 	}
 
 	private SymbolType createSymbolType(Type type, int dimension) {

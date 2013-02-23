@@ -8,8 +8,11 @@ import IC.Parser.CourtesyErrorReporter;
 public class MethodSymbolType extends SymbolType {
 	List<SymbolType> formalsTypes = new ArrayList<SymbolType>();
 	private SymbolType returnType;
+	private final boolean isStatic;
 
-	public MethodSymbolType(List<SymbolType> formalsTypes, SymbolType returnType) {
+	public MethodSymbolType(boolean isStatic, List<SymbolType> formalsTypes,
+			SymbolType returnType) {
+		this.isStatic = isStatic;
 		this.formalsTypes = formalsTypes;
 		this.returnType = returnType;
 	}
@@ -17,6 +20,7 @@ public class MethodSymbolType extends SymbolType {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
+		builder.append(isStatic ? "static " : "");
 		builder.append("{");
 		List<String> formalsTypeNames = new ArrayList<String>();
 		for (SymbolType typeName : formalsTypes) {
@@ -57,7 +61,8 @@ public class MethodSymbolType extends SymbolType {
 			return false;
 		}
 		MethodSymbolType other = (MethodSymbolType) obj;
-		return other.getReturnType().equals(this.getReturnType())
+		return other.isStatic == this.isStatic
+				&& other.getReturnType().equals(this.getReturnType())
 				&& areListsEqual(other.formalsTypes, this.formalsTypes);
 	}
 
@@ -65,11 +70,16 @@ public class MethodSymbolType extends SymbolType {
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
+		result = prime * result + (isStatic ? 1 : 0);
 		result = prime * result + getReturnType().hashCode();
 		for (SymbolType formalType : formalsTypes) {
 			result = prime * result + formalType.hashCode();
 		}
 		return result;
+	}
+
+	public boolean isStatic() {
+		return isStatic;
 	}
 
 	public SymbolType getReturnType() {

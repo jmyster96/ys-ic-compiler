@@ -38,15 +38,4 @@ public class StatementsBlock extends Statement {
 	public List<Statement> getStatements() {
 		return statements;
 	}
-
-	StatementBlockSymbolTable symbolTable;
-
-	public StatementBlockSymbolTable getStatementsBlockSymbolTable() {
-		return symbolTable;
-	}
-
-	public void setBlockSymbolTable(StatementBlockSymbolTable symbolTable) {
-		this.symbolTable = symbolTable;
-	}
-
 }

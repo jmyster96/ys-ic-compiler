@@ -1,6 +1,8 @@
 package IC.AST;
 
 import IC.Semantic.SemanticError;
+import IC.SymbolTypes.SymbolType;
+import IC.Symbols.SymbolTable;
 
 /**
  * Abstract AST node base class.
@@ -10,6 +12,8 @@ import IC.Semantic.SemanticError;
 public abstract class ASTNode {
 
 	private int line;
+	private SymbolTable enclosingScope;
+	private SymbolType symbolType;
 
 	/**
 	 * Double dispatch method, to allow a visitor to visit a specific subclass.
@@ -39,4 +43,19 @@ public abstract class ASTNode {
 		return line;
 	}
 
+	public SymbolTable getEnclosingScope() {
+		return enclosingScope;
+	}
+	
+	public void setEnclosingScope(SymbolTable enclosingScope) {
+		this.enclosingScope = enclosingScope;
+	}
+	
+	public SymbolType getSymbolType() {
+		return symbolType;
+	}
+
+	public void setSymbolType(SymbolType symbolType) {
+		this.symbolType = symbolType;
+	}
 }

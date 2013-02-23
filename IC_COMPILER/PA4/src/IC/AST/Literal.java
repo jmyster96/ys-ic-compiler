@@ -65,7 +65,7 @@ public class Literal extends Expression {
 		this.value = value;
 	}
 
-	public void yourParentIsUMinus() {
+	public void setYourParentIsUMinusToTrue() {
 		this.parentIsUMinus = true;
 	}
 

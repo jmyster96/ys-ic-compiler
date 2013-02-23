@@ -1,11 +1,14 @@
 package IC.Symbols;
 
+import IC.AST.ASTNode;
+import IC.AST.Program;
 import IC.SymbolTypes.SymbolTypeTable;
 
 public class GlobalSymbolTable extends SymbolTable {
 
-	public GlobalSymbolTable(String name, SymbolTypeTable typeTable) {
-		super(name, typeTable);
+	public GlobalSymbolTable(String programName, Program program,
+			SymbolTypeTable typeTable) {
+		super(programName, program, typeTable);
 	}
 
 	@Override

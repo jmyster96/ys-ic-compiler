@@ -70,16 +70,8 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	public GlobalSymbolTable visit(Program program) {
 		// Create the main symbol table
 		GlobalSymbolTable globalTable = new GlobalSymbolTable(programName,
-				typeTable);
-		program.setGlobalSymbolTable(globalTable);
-
-		// Step 0: Look for circlualr inheritance
-		//try {
-			//checkIfHaveCircularInheritance(program.getClasses());
-		//} catch (SemanticError e) {
-			//errors.add(e);
-			//return globalTable;
-		//}
+				program, typeTable);
+		program.setEnclosingScope(globalTable);
 
 		// Step 1: Go through the classes, and create a Symbol and a SymbolTable
 		// for each one.
@@ -94,19 +86,26 @@ public class SymbolTableBuilderVisitor implements Visitor {
 			ClassSymbolTable classTable = (ClassSymbolTable) clazz.accept(this);
 			symbolTableForClass.put(clazz.getName(), classTable);
 			if (clazz.hasSuperClass()) {
-				// If the class has a base class, add the class' symbol table as
-				// a child at the base class' symbol table
-				SymbolTable parentSymbolTable = symbolTableForClass.get(clazz
-						.getSuperClassName());
-				if (parentSymbolTable == null) {
+				if (clazz.getSuperClassName().equals(clazz.getName())) {
 					errors.add(new SemanticError("Class '" + clazz.getName()
-							+ "' extends from a non-existant class", clazz
-							.getLine(), clazz.getSuperClassName()));
-					globalTable.addChild(classTable);
+							+ "': cannot extend itself.", clazz.getLine(),
+							clazz.getName()));
 				} else {
-					parentSymbolTable.addChild(classTable);
+					// If the class has a base class, add the class' symbol
+					// table as a child at the base class' symbol table
+					SymbolTable parentSymbolTable = symbolTableForClass
+							.get(clazz.getSuperClassName());
+					if (parentSymbolTable == null) {
+						errors.add(new SemanticError("Class '"
+								+ clazz.getName()
+								+ "' extends from a non-existant class", clazz
+								.getLine(), clazz.getSuperClassName()));
+						globalTable.addChild(classTable);
+					} else {
+						parentSymbolTable.addChild(classTable);
+					}
+					typeTable.setSuperForClass(clazz);
 				}
-				typeTable.setSuperForClass(clazz);
 			} else {
 				// Class doesn't have a base class.
 				globalTable.addChild(classTable);
@@ -152,9 +151,8 @@ public class SymbolTableBuilderVisitor implements Visitor {
 
 	@Override
 	public ClassSymbolTable visit(ICClass icClass) {
-		ClassSymbolTable classTable = new ClassSymbolTable(icClass.getName(),
-				typeTable);
-		icClass.setClassSymbolTable(classTable);
+		ClassSymbolTable classTable = new ClassSymbolTable(icClass, typeTable);
+		icClass.setEnclosingScope(classTable);
 		for (Field field : icClass.getFields()) {
 			Symbol fieldSymbol = new Symbol(field.getName(), SymbolKind.FIELD,
 					typeTable.getSymbolTypeId(field.getType(), field.getType()
@@ -167,11 +165,11 @@ public class SymbolTableBuilderVisitor implements Visitor {
 			if (method instanceof VirtualMethod) {
 				methodSymbol = new Symbol(method.getName(),
 						SymbolKind.VIRTUAL_METHOD,
-						typeTable.getSymbolTypeId(method), method.getLine());
+						typeTable.getSymbolTypeId(false, method), method.getLine());
 			} else { // method is a StaticMethod or a LibraryMethod)
 				methodSymbol = new Symbol(method.getName(),
 						SymbolKind.STATIC_METHOD,
-						typeTable.getSymbolTypeId(method), method.getLine());
+						typeTable.getSymbolTypeId(true, method), method.getLine());
 			}
 			MethodSymbolTable methodTable = (MethodSymbolTable) method
 					.accept(this);
@@ -192,9 +190,8 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	}
 
 	private MethodSymbolTable buildMethodSymbolTable(Method method) {
-		MethodSymbolTable table = new MethodSymbolTable(method.getName(),
-				typeTable);
-		method.setMethodSymbolTable(table);
+		MethodSymbolTable table = new MethodSymbolTable(method, typeTable);
+		method.setEnclosingScope(table);
 		for (Formal formal : method.getFormals()) {
 			Symbol symbol = new Symbol(formal.getName(), SymbolKind.PARAMETER,
 					typeTable.getSymbolTypeId(formal.getType(), formal
@@ -339,8 +336,8 @@ public class SymbolTableBuilderVisitor implements Visitor {
 	@Override
 	public SymbolOrTables visit(StatementsBlock statementsBlock) {
 		StatementBlockSymbolTable blockTable = new StatementBlockSymbolTable(
-				typeTable);
-		statementsBlock.setBlockSymbolTable(blockTable);
+				statementsBlock, typeTable);
+		statementsBlock.setEnclosingScope(blockTable);
 		getSymbolsAndChildTablesFromStatementList(blockTable,
 				statementsBlock.getStatements());
 		return new SymbolOrTables(blockTable);

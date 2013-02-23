@@ -37,14 +37,4 @@ public class Program extends ASTNode {
 	public List<ICClass> getClasses() {
 		return classes;
 	}
-
-	GlobalSymbolTable symbolTable;
-
-	public GlobalSymbolTable getGlobalSymbolTable() {
-		return symbolTable;
-	}
-
-	public void setGlobalSymbolTable(GlobalSymbolTable symbolTable) {
-		this.symbolTable = symbolTable;
-	}
 }

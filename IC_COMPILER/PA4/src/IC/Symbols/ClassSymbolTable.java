@@ -1,11 +1,13 @@
 package IC.Symbols;
 
+import IC.AST.ASTNode;
+import IC.AST.ICClass;
 import IC.SymbolTypes.SymbolTypeTable;
 
 public class ClassSymbolTable extends SymbolTable {
 
-	public ClassSymbolTable(String name, SymbolTypeTable typeTable) {
-		super(name, typeTable);
+	public ClassSymbolTable(ICClass icClass, SymbolTypeTable typeTable) {
+		super(icClass.getName(), icClass, typeTable);
 	}
 
 	@Override

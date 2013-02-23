@@ -87,14 +87,4 @@ public class ICClass extends ASTNode {
 	public List<Method> getMethods() {
 		return methods;
 	}
-
-	ClassSymbolTable symbolTable;
-
-	public ClassSymbolTable getClassSymbolTable() {
-		return symbolTable;
-	}
-
-	public void setClassSymbolTable(ClassSymbolTable symbolTable) {
-		this.symbolTable = symbolTable;
-	}
 }
