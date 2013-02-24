@@ -1,1 +1,2 @@
-java -cp classes/:classes/IC/:lib/java-cup-11a.jar IC.Compiler $1 -Ltest/libic.sig -dump-symtab -print-ast
+java -cp classes/:classes/IC/:lib/java-cup-11a.jar IC.Compiler $1 -Ltest/libic.sig -dump-symtab -print-ast -print-lir
+java -cp ~/Downloads/microLir/build:lib/java-cup-11a.jar microLIR.Main "${1:0:`expr "$1" : '.*\.'`}"lir

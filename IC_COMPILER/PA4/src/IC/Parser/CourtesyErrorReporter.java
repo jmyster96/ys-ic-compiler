@@ -53,4 +53,5 @@ public class CourtesyErrorReporter {
 						.get(size - 4)).sym == sym.IF || ((Token) pastTokens
 						.get(size - 4)).sym == sym.WHILE));
 	}
+
 }

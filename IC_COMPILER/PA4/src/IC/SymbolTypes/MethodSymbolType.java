@@ -3,18 +3,26 @@ package IC.SymbolTypes;
 import java.util.ArrayList;
 import java.util.List;
 
+import IC.AST.Method;
 import IC.Parser.CourtesyErrorReporter;
 
 public class MethodSymbolType extends SymbolType {
 	List<SymbolType> formalsTypes = new ArrayList<SymbolType>();
 	private SymbolType returnType;
 	private final boolean isStatic;
+	private final Method method;
 
 	public MethodSymbolType(boolean isStatic, List<SymbolType> formalsTypes,
-			SymbolType returnType) {
+			SymbolType returnType, Method method) {
 		this.isStatic = isStatic;
 		this.formalsTypes = formalsTypes;
 		this.returnType = returnType;
+		this.method = method;
+	}
+
+	public Method getMethod() {
+		return this.method;
+
 	}
 
 	@Override

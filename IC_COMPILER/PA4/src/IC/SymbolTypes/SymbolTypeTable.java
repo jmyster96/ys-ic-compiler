@@ -79,7 +79,7 @@ public class SymbolTypeTable {
 		SymbolType returnType = getSymbolById(getSymbolTypeId(method.getType(),
 				method.getType().getDimension()));
 		// Create type for method
-		return new MethodSymbolType(isStatic, formalsTypes, returnType);
+		return new MethodSymbolType(isStatic, formalsTypes, returnType, method);
 	}
 
 	private SymbolType createSymbolType(Type type, int dimension) {

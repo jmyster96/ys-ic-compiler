@@ -61,6 +61,14 @@ public class Literal extends Expression {
 		return value;
 	}
 
+	public String getQuotedString() {
+		String unquoted = value.toString();
+		return "\""
+				+ unquoted.replace("\n", "\\n").replace("\t", "\\t")
+						.replace("\\", "\\\\").replace("\"", "\\\"")
+						.replace("\'", "\\\'") + "\"";
+	}
+
 	public void setValue(Integer value) {
 		this.value = value;
 	}

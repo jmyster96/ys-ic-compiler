@@ -3,6 +3,9 @@ package IC;
 import IC.AST.ICClass;
 import IC.AST.PrettyPrinter;
 import IC.AST.Program;
+import IC.LIR.LIRGeneratorVisitor;
+import IC.LIR.LIRGeneratorVisitorContext;
+import IC.LIR.LR;
 import IC.Parser.*;
 import IC.Semantic.BreakContinueAndThisValidator;
 import IC.Semantic.SemanticError;
@@ -53,13 +56,38 @@ public class Compiler {
 				System.out.println();
 				System.out
 						.println("Semantic errors occurred, compilation terminated!");
+				System.exit(0);
 			}
 
+			if (options.printLIR) {
+				translateAstToLir(options, program);
+			}
 		} catch (IOException e) {
 			// We were asked to gracefully return 0 on errors.
 			System.out.println(e);
 			System.exit(0);
 		}
+	}
+
+	private static void translateAstToLir(Options options, Program program)
+			throws IOException {
+		LIRGeneratorVisitor visitor = new LIRGeneratorVisitor();
+		LR programCode = program.accept(visitor,
+				new LIRGeneratorVisitorContext());
+
+		String filepath = options.sourcePath.substring(0,
+				options.sourcePath.lastIndexOf(".") + 1)
+				+ "lir";
+		BufferedWriter out = new BufferedWriter(new FileWriter(filepath));
+		int i = 1;
+		for (String line : programCode.getCommands()) {
+			System.out.println(i + "\t" + line);
+			out.write(line + "\n");
+			i++;
+		}
+		System.out.println();
+		System.out.println("Written LIR file to " + filepath + ".");
+		out.close();
 	}
 
 	private static boolean doSemanticChecks(Options options,
@@ -221,6 +249,7 @@ public class Compiler {
 		private String sourcePath;
 		private boolean printAST;
 		private boolean dumpSymTab;
+		private boolean printLIR;
 
 		private Options() {
 			this.libicPath = "libic.sig";
@@ -244,6 +273,8 @@ public class Compiler {
 			for (String arg : args) {
 				if (arg.startsWith("-L")) {
 					options.libicPath = arg.substring(2);
+				} else if (arg.equals("-print-lir")) {
+					options.printLIR = true;
 				} else if (arg.equals("-print-ast")) {
 					options.printAST = true;
 				} else if (arg.equals("-dump-symtab")) {
