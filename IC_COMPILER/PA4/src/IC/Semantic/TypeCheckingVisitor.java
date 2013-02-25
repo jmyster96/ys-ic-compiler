@@ -208,6 +208,7 @@ public class TypeCheckingVisitor implements
 			stmnt.accept(this, context);
 		}
 		context.currentMethodSymbolType = null;
+		method.setSymbolType(symbolType);
 		return symbolType;
 	}
 
@@ -420,6 +421,7 @@ public class TypeCheckingVisitor implements
 							.getName());
 					SymbolType exprType = getTypeTable().getSymbolById(
 							variableSymbol.getTypeId());
+					location.setSymbol(variableSymbol);
 					location.setSymbolType(exprType);
 					return exprType;
 				} catch (SymbolTableException e) {
@@ -463,6 +465,7 @@ public class TypeCheckingVisitor implements
 			SymbolTable otherScope = call.getEnclosingScope().lookupScope(
 					call.getClassName());
 			methodSymbol = otherScope.lookup(call.getName());
+			call.setSymbol(methodSymbol);
 		} catch (SymbolTableException e) {
 			// Call is illegal: scope check already reported this.
 			call.setSymbolType(getVoidType());
@@ -552,6 +555,7 @@ public class TypeCheckingVisitor implements
 			// 3. HACK: Scope Checking: Verify the class has the method.
 			try {
 				methodSymbol = classScope.lookup(call.getName());
+				call.setSymbol(methodSymbol);
 			} catch (SymbolTableException e) {
 				errors.add(new SemanticError(e.getMessage(), call.getLine()));
 				call.setSymbolType(getVoidType());

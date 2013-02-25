@@ -3,9 +3,9 @@ package IC;
 import IC.AST.ICClass;
 import IC.AST.PrettyPrinter;
 import IC.AST.Program;
-import IC.LIR.LIRGeneratorVisitor;
-import IC.LIR.LIRGeneratorVisitorContext;
-import IC.LIR.LR;
+import IC.LIR.TranslatorVisitor;
+import IC.LIR.TranslatorVisitorContext;
+import IC.LIR.LIRCode;
 import IC.Parser.*;
 import IC.Semantic.BreakContinueAndThisValidator;
 import IC.Semantic.SemanticError;
@@ -71,20 +71,26 @@ public class Compiler {
 
 	private static void translateAstToLir(Options options, Program program)
 			throws IOException {
-		LIRGeneratorVisitor visitor = new LIRGeneratorVisitor();
-		LR programCode = program.accept(visitor,
-				new LIRGeneratorVisitorContext());
+		System.out.println("Translating to LIR...");
+		TranslatorVisitor visitor = new TranslatorVisitor();
+		LIRCode programCode = program.accept(visitor,
+				new TranslatorVisitorContext());
 
+		System.out.println("Finished translating to LIR.");
 		String filepath = options.sourcePath.substring(0,
 				options.sourcePath.lastIndexOf(".") + 1)
 				+ "lir";
+		
+		programCode.alignComments();
+		
 		BufferedWriter out = new BufferedWriter(new FileWriter(filepath));
 		int i = 1;
 		for (String line : programCode.getCommands()) {
-			System.out.println(i + "\t" + line);
+			// System.out.println(i + "\t" + line);
 			out.write(line + "\n");
 			i++;
 		}
+
 		System.out.println();
 		System.out.println("Written LIR file to " + filepath + ".");
 		out.close();
@@ -105,6 +111,10 @@ public class Compiler {
 		GlobalSymbolTable symbolTable = symTabBuilder.visit(program);
 		if (printErrors(filepath, symTabBuilder.getErrors())) {
 			return false;
+		}
+		if (options.dumpSymTab) {
+			System.out.println();
+			System.out.println(symbolTable.toString());
 		}
 
 		//
@@ -149,10 +159,6 @@ public class Compiler {
 
 		// NOTE: This is done in the Syntax analysis.
 
-		if (options.dumpSymTab) {
-			System.out.println();
-			System.out.println(symbolTable.toString());
-		}
 		return true;
 	}
 

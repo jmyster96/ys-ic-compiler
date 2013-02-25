@@ -1,0 +1,56 @@
+_________________________________
+Compilation project documentation
+Exercise 4
+=================================
+
+Summary: In this exercise we implemented semantic analysis for the IC language, 
+including symbol table construction.
+
+_______
+CLASSES
+
+New in this PA:
+
+package LIR:
+
+1. class TranslatorVisitor
+-------------------------- 
+Implements PropagatingVisitor<TranslatorVisitorContext, LIRCode>.
+Translates all AST nodes to LIR code.  
+
+
+
+________________
+TESTING STRATEGY
+
+A handy script that runs the IC compiler on an input file, and then
+automatically calls microLIR simulator on the translation. 
+
+_______________
+ERROR REPORTING
+
+No new errors are introduced to the user in this stage.
+The Translator makes some assertions, and if they fail "Compiler errors" may
+show. Those indicate bugs in the compiler (no known bugs at submission: but we
+might have missed some tests).
+
+
+_______
+BONUSES
+
+Bonus 2: Registers are reused. The implementation is courteous: each time an
+expression is calculated, the client of the value needs to free the target 
+register of the sub-expression.
+
+_____________
+OPTIMIZATIONS
+
+Minor: Keeping only a single instance of each string literal
+
+____________
+KNOWN ISSUES
+
+1. A 'Return 9999' statement is added at the end of every function call. That's
+   because our semantic checker doesn't check that there's always a return
+   statement.
+

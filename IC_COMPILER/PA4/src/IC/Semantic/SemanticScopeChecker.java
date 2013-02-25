@@ -33,6 +33,7 @@ public class SemanticScopeChecker implements Visitor {
 		Symbol symbol;
 		try {
 			symbol = node.getEnclosingScope().lookup(name);
+			node.setSymbol(symbol);
 		} catch (SymbolTableException e) {
 			errors.add(new SemanticError(e.getMessage(), node.getLine()));
 			return false;
@@ -61,6 +62,7 @@ public class SemanticScopeChecker implements Visitor {
 			SymbolTable otherScope = node.getEnclosingScope().lookupScope(
 					otherScopeName);
 			symbol = otherScope.lookup(symbolName);
+			node.setSymbol(symbol);
 		} catch (SymbolTableException e) {
 			errors.add(new SemanticError(e.getMessage(), node.getLine()));
 			return false;
@@ -77,6 +79,7 @@ public class SemanticScopeChecker implements Visitor {
 					+ "'", node.getLine(), symbol.getName()));
 			return false;
 		}
+		node.setSymbol(symbol);
 		return true;
 	}
 
@@ -263,6 +266,8 @@ public class SemanticScopeChecker implements Visitor {
 	public Object visit(LocalVariable localVariable) {
 		setEnclosingScope(localVariable);
 		localVariable.getType().accept(this);
+		verifySymbolIsOfKind(localVariable, localVariable.getName(),
+				SymbolKind.LOCAL_VARIABLE);
 		if (localVariable.hasInitValue()) {
 			localVariable.getInitValue().accept(this);
 		}

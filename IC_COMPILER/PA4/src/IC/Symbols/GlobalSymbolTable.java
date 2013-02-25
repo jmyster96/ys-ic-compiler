@@ -21,4 +21,15 @@ public class GlobalSymbolTable extends SymbolTable {
 		// TODO Auto-generated method stub
 		return super.toString() + "\n" + getTypeTable().toString();
 	}
+	
+	@Override
+	public SymbolTable lookupScope(String name) throws SymbolTableException {
+		try {
+			Symbol clazz = lookup(name);
+			return clazz.getScope();
+		} catch (SymbolTableException e) {
+			// Do nothing
+		}
+		return super.lookupScope(name);
+	}
 }

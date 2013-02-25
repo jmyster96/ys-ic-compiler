@@ -1,0 +1,32 @@
+class Comparisons {
+  static void main(string[] args) {
+    int i = 0;
+    int j = 10;
+    boolean eq = (i == j);
+    Library.printb(eq);
+    Library.println(" <-- expected false");
+    boolean neq = (i != j);
+    Library.printb(neq);
+    Library.println(" <-- expected true");
+    Library.printb(i < j);
+    Library.println(" <-- i < j: expected true");
+    Library.printb(i <= j);
+    Library.println(" <-- i <= j: expected true");
+    Library.printb(i > j);
+    Library.println(" <-- i > j: expected false");
+    Library.printb(i > j);
+    Library.println(" <-- i >= j: expected false");
+    Library.printb(i <= i);
+    Library.println(" <-- i <= i: expected true");
+    Library.printb(i >= i);
+    Library.println(" <-- i >= i: expected true");
+    Library.printb(j >= j);
+    Library.println(" <-- j >= j: expected true");
+    Library.printb(j <= j);
+    Library.println(" <-- j <= j: expected true");
+    Library.printb(j == j);
+    Library.println(" <-- j == j: expected true");
+    Library.printb(j != j);
+    Library.println(" <-- j != j: expected false");
+  }
+}

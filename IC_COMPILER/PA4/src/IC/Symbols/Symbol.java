@@ -8,7 +8,11 @@ public class Symbol {
 	int symbolTypeId;
 	int lineNumber;
 
-	public Symbol(String name, SymbolKind kind, int symbolTypeIndex, int lineNumber) {
+	// In case this symbol has a scope (class, method, etc), this is it
+	private SymbolTable scope;
+
+	public Symbol(String name, SymbolKind kind, int symbolTypeIndex,
+			int lineNumber) {
 		this.name = name;
 		this.kind = kind;
 		this.symbolTypeId = symbolTypeIndex;
@@ -25,5 +29,14 @@ public class Symbol {
 
 	public String getName() {
 		return name;
+	}
+
+	public SymbolTable getScope() {
+		return scope;
+	}
+
+	public void setScope(SymbolTable scope) {
+		this.scope = scope;
+
 	}
 }

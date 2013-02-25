@@ -16,6 +16,7 @@ class Sieve {
   int[] num;
 
   void initArray() {
+    Library.println("In initArray()");
     int i = 0;
     while (i < num.length) {
       num[i] = i;
@@ -24,6 +25,7 @@ class Sieve {
   }
 
   void sieveAll() {
+    Library.println("in sieveAll");
     int i = 2;
     while (i < num.length) {
       sieve(i);
@@ -40,6 +42,7 @@ class Sieve {
   }
 
   void printPrimes() {
+    Library.println("in printPrimes()");
     int i = 2;
     Library.print("Primes less than ");
     Library.printi(num.length);
@@ -55,7 +58,9 @@ class Sieve {
 
 
   static void main(string[] args) {
-    (new Sieve()).test(args);
+    string[] args2 = new string[1];
+    args2[0] = "10000";
+    (new Sieve()).test(args2);
   }
 
   void test(string[] args) {
@@ -67,7 +72,9 @@ class Sieve {
     }
 
     Library.println("");
-    n = Library.stoi(args[0], 0);
+    Library.println(args[0]);
+    n = Library.stoi(args[0]);
+    Library.printi(n);
     if (n <= 0) {
       Library.println("Invalid array length");
       return;
@@ -75,8 +82,11 @@ class Sieve {
     num = new int[n];
 
     initArray();
+    Library.println("after initArray");
     sieveAll();
+    Library.println("after sieveAll");
     printPrimes();
+    Library.println("after printPrimes");
     Library.println("");
 
   }

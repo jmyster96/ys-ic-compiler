@@ -1,0 +1,315 @@
+str1: "In initArray()"
+str2: "in sieveAll"
+str3: "in printPrimes()"
+str4: "Primes less than "
+str5: ": "
+str6: " "
+str7: "10000"
+str8: "Unspecified number."
+str9: ""
+str10: "Invalid array length"
+str11: "after initArray"
+str12: "after sieveAll"
+str13: "after printPrimes"
+
+_DV_Sieve: [_Sieve_initArray, _Sieve_sieveAll, _Sieve_sieve, _Sieve_printPrimes, _Sieve_test]
+
+
+
+# Method: initArray() in class: Sieve
+# -----------------------------------
+_Sieve_initArray:
+  Move str1, R0                     # String literal
+  Library __println(R0), Rdummy
+  Move 0, R0                        # Integer literal
+  Move R0, symbol0_i                # Init local variable (was i)
+  # While. Condition:
+_while_test_label0:
+  # Starting binop code: LT
+  # operand 1: 
+  Move symbol0_i, R0                # symbol0_i was i (Local variable)
+  # operand 2: 
+  Move this, R3                     # Getting ready to access 'this' class member
+  MoveField R3.1, R2                # Reading from field Sieve.num
+  ArrayLength R2, R1                # Array length
+  Move 1, R2                        # Comparison default
+  Compare R0, R1                    # Comparison
+  JumpG _comparison_binop_label0
+  Move 0, R2                        # Comparison not true
+_comparison_binop_label0:
+  # End of binop code: LT
+  Compare 0, R2                     # while condition
+  JumpTrue _while_end_label0
+  # While. Do:
+  Move symbol0_i, R0                # symbol0_i was i (Local variable)
+  Move this, R2                     # Getting ready to access 'this' class member
+  MoveField R2.1, R1                # Reading from field Sieve.num
+  Move symbol0_i, R2                # symbol0_i was i (Local variable)
+  MoveArray R0, R1[R2]              # Assign to array
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move symbol0_i, R0                # symbol0_i was i (Local variable)
+  Add 1, R0                         # Math operator
+  # End of binop code: PLUS
+  Move R0, symbol0_i                # Assignment to local variable (was i)
+  Jump _while_test_label0
+  # End while
+_while_end_label0:
+  Return 9999
+
+
+# Method: sieveAll() in class: Sieve
+# ----------------------------------
+_Sieve_sieveAll:
+  Move str2, R0                     # String literal
+  Library __println(R0), Rdummy
+  Move 2, R0                        # Integer literal
+  Move R0, symbol1_i                # Init local variable (was i)
+  # While. Condition:
+_while_test_label1:
+  # Starting binop code: LT
+  # operand 1: 
+  Move symbol1_i, R0                # symbol1_i was i (Local variable)
+  # operand 2: 
+  Move this, R3                     # Getting ready to access 'this' class member
+  MoveField R3.1, R2                # Reading from field Sieve.num
+  ArrayLength R2, R1                # Array length
+  Move 1, R2                        # Comparison default
+  Compare R0, R1                    # Comparison
+  JumpG _comparison_binop_label1
+  Move 0, R2                        # Comparison not true
+_comparison_binop_label1:
+  # End of binop code: LT
+  Compare 0, R2                     # while condition
+  JumpTrue _while_end_label1
+  # While. Do:
+  Move symbol1_i, R0                # symbol1_i was i (Local variable)
+  Move this, R1                     # implicit this
+  VirtualCall R1.2(n=R0), Rdummy    # Calling virtual method Sieve.sieve()
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move symbol1_i, R0                # symbol1_i was i (Local variable)
+  Add 1, R0                         # Math operator
+  # End of binop code: PLUS
+  Move R0, symbol1_i                # Assignment to local variable (was i)
+  Jump _while_test_label1
+  # End while
+_while_end_label1:
+  Return 9999
+
+
+# Method: sieve() in class: Sieve
+# -------------------------------
+_Sieve_sieve:
+  # Starting binop code: MULTIPLY
+  # operand 1: 
+  Move 2, R0                        # Integer literal
+  # operand 2: 
+  Move n, R1                        # n was n (Parameter)
+  Mul R1, R0                        # Math operator
+  # End of binop code: MULTIPLY
+  Move R0, symbol2_i                # Init local variable (was i)
+  # While. Condition:
+_while_test_label2:
+  # Starting binop code: LT
+  # operand 1: 
+  Move symbol2_i, R0                # symbol2_i was i (Local variable)
+  # operand 2: 
+  Move this, R3                     # Getting ready to access 'this' class member
+  MoveField R3.1, R2                # Reading from field Sieve.num
+  ArrayLength R2, R1                # Array length
+  Move 1, R2                        # Comparison default
+  Compare R0, R1                    # Comparison
+  JumpG _comparison_binop_label2
+  Move 0, R2                        # Comparison not true
+_comparison_binop_label2:
+  # End of binop code: LT
+  Compare 0, R2                     # while condition
+  JumpTrue _while_end_label2
+  # While. Do:
+  Move 0, R0                        # Integer literal
+  Move this, R2                     # Getting ready to access 'this' class member
+  MoveField R2.1, R1                # Reading from field Sieve.num
+  Move symbol2_i, R2                # symbol2_i was i (Local variable)
+  MoveArray R0, R1[R2]              # Assign to array
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move symbol2_i, R0                # symbol2_i was i (Local variable)
+  # operand 2: 
+  Move n, R1                        # n was n (Parameter)
+  Add R1, R0                        # Math operator
+  # End of binop code: PLUS
+  Move R0, symbol2_i                # Assignment to local variable (was i)
+  Jump _while_test_label2
+  # End while
+_while_end_label2:
+  Return 9999
+
+
+# Method: printPrimes() in class: Sieve
+# -------------------------------------
+_Sieve_printPrimes:
+  Move str3, R0                     # String literal
+  Library __println(R0), Rdummy
+  Move 2, R0                        # Integer literal
+  Move R0, symbol3_i                # Init local variable (was i)
+  Move str4, R0                     # String literal
+  Library __print(R0), Rdummy
+  Move this, R2                     # Getting ready to access 'this' class member
+  MoveField R2.1, R1                # Reading from field Sieve.num
+  ArrayLength R1, R0                # Array length
+  Library __printi(R0), Rdummy
+  Move str5, R0                     # String literal
+  Library __print(R0), Rdummy
+  # While. Condition:
+_while_test_label3:
+  # Starting binop code: LT
+  # operand 1: 
+  Move symbol3_i, R0                # symbol3_i was i (Local variable)
+  # operand 2: 
+  Move this, R3                     # Getting ready to access 'this' class member
+  MoveField R3.1, R2                # Reading from field Sieve.num
+  ArrayLength R2, R1                # Array length
+  Move 1, R2                        # Comparison default
+  Compare R0, R1                    # Comparison
+  JumpG _comparison_binop_label3
+  Move 0, R2                        # Comparison not true
+_comparison_binop_label3:
+  # End of binop code: LT
+  Compare 0, R2                     # while condition
+  JumpTrue _while_end_label3
+  # While. Do:
+  # Starting if code. if:
+  # Starting binop code: NEQUAL
+  # operand 1: 
+  Move this, R2                     # Getting ready to access 'this' class member
+  MoveField R2.1, R1                # Reading from field Sieve.num
+  Move symbol3_i, R2                # symbol3_i was i (Local variable)
+  MoveArray R1[R2], R0              # Reading from array
+  # operand 2: 
+  Move 0, R1                        # Integer literal
+  Move 1, R2                        # Comparison default
+  Compare R0, R1                    # Comparison
+  JumpFalse _comparison_binop_label4
+  Move 0, R2                        # Comparison not true
+_comparison_binop_label4:
+  # End of binop code: NEQUAL
+  Compare 0, R2                     # if condition
+  JumpTrue _if_end_label0
+  # ... then:
+  Move this, R2                     # Getting ready to access 'this' class member
+  MoveField R2.1, R1                # Reading from field Sieve.num
+  Move symbol3_i, R2                # symbol3_i was i (Local variable)
+  MoveArray R1[R2], R0              # Reading from array
+  Library __printi(R0), Rdummy
+  Move str6, R0                     # String literal
+  Library __print(R0), Rdummy
+  # ... endif.
+_if_end_label0:
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move symbol3_i, R0                # symbol3_i was i (Local variable)
+  Add 1, R0                         # Math operator
+  # End of binop code: PLUS
+  Move R0, symbol3_i                # Assignment to local variable (was i)
+  Jump _while_test_label3
+  # End while
+_while_end_label3:
+  Return 9999
+
+
+# Method: main() in class: Sieve
+# ------------------------------
+_ic_main:
+  Move 1, R1                        # Integer literal
+  Mul 4, R1                         # Array size is num_items * 4
+  Library __allocateArray(R1), R0
+  Move R0, symbol4_args2            # Init local variable (was args2)
+  Move str7, R0                     # String literal
+  Move symbol4_args2, R1            # symbol4_args2 was args2 (Local variable)
+  Move 0, R2                        # Integer literal
+  MoveArray R0, R1[R2]              # Assign to array
+  Move symbol4_args2, R0            # symbol4_args2 was args2 (Local variable)
+  Library __allocateObject(8), R1
+  MoveField _DV_Sieve, R1.0
+  VirtualCall R1.4(args=R0), Rdummy # Calling virtual method Sieve.test()
+  Library __exit(0), Rdummy         # Exit from main
+
+
+# Method: test() in class: Sieve
+# ------------------------------
+_Sieve_test:
+  # Starting if code. if:
+  # Starting binop code: NEQUAL
+  # operand 1: 
+  Move args, R1                     # args was args (Parameter)
+  ArrayLength R1, R0                # Array length
+  # operand 2: 
+  Move 1, R1                        # Integer literal
+  Move 1, R2                        # Comparison default
+  Compare R0, R1                    # Comparison
+  JumpFalse _comparison_binop_label5
+  Move 0, R2                        # Comparison not true
+_comparison_binop_label5:
+  # End of binop code: NEQUAL
+  Compare 0, R2                     # if condition
+  JumpTrue _if_end_label1
+  # ... then:
+  Move str8, R0                     # String literal
+  Library __println(R0), Rdummy
+  Return 9999
+  # ... endif.
+_if_end_label1:
+  Move str9, R0                     # String literal
+  Library __println(R0), Rdummy
+  Move args, R1                     # args was args (Parameter)
+  Move 0, R2                        # Integer literal
+  MoveArray R1[R2], R0              # Reading from array
+  Library __println(R0), Rdummy
+  Move args, R2                     # args was args (Parameter)
+  Move 0, R3                        # Integer literal
+  MoveArray R2[R3], R1              # Reading from array
+  Library __stoi(R1), R0
+  Move R0, symbol5_n                # Assignment to local variable (was n)
+  Move symbol5_n, R0                # symbol5_n was n (Local variable)
+  Library __printi(R0), Rdummy
+  # Starting if code. if:
+  # Starting binop code: LTE
+  # operand 1: 
+  Move symbol5_n, R0                # symbol5_n was n (Local variable)
+  # operand 2: 
+  Move 0, R1                        # Integer literal
+  Move 1, R2                        # Comparison default
+  Compare R0, R1                    # Comparison
+  JumpGE _comparison_binop_label6
+  Move 0, R2                        # Comparison not true
+_comparison_binop_label6:
+  # End of binop code: LTE
+  Compare 0, R2                     # if condition
+  JumpTrue _if_end_label2
+  # ... then:
+  Move str10, R0                    # String literal
+  Library __println(R0), Rdummy
+  Return 9999
+  # ... endif.
+_if_end_label2:
+  Move symbol5_n, R1                # symbol5_n was n (Local variable)
+  Mul 4, R1                         # Array size is num_items * 4
+  Library __allocateArray(R1), R0
+  Move this, R1                     # implicit this: assigning to current class member
+  MoveField R0, R1.1                # Assign to field Sieve.num
+  Move this, R0                     # implicit this
+  VirtualCall R0.0(), Rdummy        # Calling virtual method Sieve.initArray()
+  Move str11, R0                    # String literal
+  Library __println(R0), Rdummy
+  Move this, R0                     # implicit this
+  VirtualCall R0.1(), Rdummy        # Calling virtual method Sieve.sieveAll()
+  Move str12, R0                    # String literal
+  Library __println(R0), Rdummy
+  Move this, R0                     # implicit this
+  VirtualCall R0.3(), Rdummy        # Calling virtual method Sieve.printPrimes()
+  Move str13, R0                    # String literal
+  Library __println(R0), Rdummy
+  Move str9, R0                     # String literal
+  Library __println(R0), Rdummy
+  Return 9999

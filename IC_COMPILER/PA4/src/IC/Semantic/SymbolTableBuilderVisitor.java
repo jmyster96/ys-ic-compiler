@@ -84,6 +84,7 @@ public class SymbolTableBuilderVisitor implements Visitor {
 			insertSymbolToTable(globalTable, clazz, classSymbol);
 
 			ClassSymbolTable classTable = (ClassSymbolTable) clazz.accept(this);
+			classSymbol.setScope(classTable);
 			symbolTableForClass.put(clazz.getName(), classTable);
 			if (clazz.hasSuperClass()) {
 				if (clazz.getSuperClassName().equals(clazz.getName())) {
@@ -164,12 +165,12 @@ public class SymbolTableBuilderVisitor implements Visitor {
 			Symbol methodSymbol;
 			if (method instanceof VirtualMethod) {
 				methodSymbol = new Symbol(method.getName(),
-						SymbolKind.VIRTUAL_METHOD,
-						typeTable.getSymbolTypeId(false, method), method.getLine());
+						SymbolKind.VIRTUAL_METHOD, typeTable.getSymbolTypeId(
+								false, method), method.getLine());
 			} else { // method is a StaticMethod or a LibraryMethod)
 				methodSymbol = new Symbol(method.getName(),
-						SymbolKind.STATIC_METHOD,
-						typeTable.getSymbolTypeId(true, method), method.getLine());
+						SymbolKind.STATIC_METHOD, typeTable.getSymbolTypeId(
+								true, method), method.getLine());
 			}
 			MethodSymbolTable methodTable = (MethodSymbolTable) method
 					.accept(this);

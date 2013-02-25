@@ -1,0 +1,351 @@
+str1: "Array elements: "
+str2: " "
+str3: "\n"
+str4: "20"
+str5: "Unspecified array length"
+str6: "Invalid array length"
+
+_DV_Quicksort: [_Quicksort_partition, _Quicksort_quicksort, _Quicksort_initArray, _Quicksort_printArray]
+
+
+
+# Method: partition() in class: Quicksort
+# ---------------------------------------
+_Quicksort_partition:
+  Move this, R2                             # Getting ready to access 'this' class member
+  MoveField R2.1, R1                        # Reading from field Quicksort.a
+  Move low, R2                              # low was low (Parameter)
+  MoveArray R1[R2], R0                      # Reading from array
+  Move R0, symbol0_pivot                    # Init local variable (was pivot)
+  Move low, R0                              # low was low (Parameter)
+  Move R0, symbol1_i                        # Init local variable (was i)
+  Move high, R0                             # high was high (Parameter)
+  Move R0, symbol2_j                        # Init local variable (was j)
+  # While. Condition:
+_while_test_label0:
+  Move 1, R0                                # True literal
+  Compare 0, R0                             # while condition
+  JumpTrue _while_end_label0
+  # While. Do:
+  # While. Condition:
+_while_test_label1:
+  # Starting binop code: LT
+  # operand 1: 
+  Move this, R2                             # Getting ready to access 'this' class member
+  MoveField R2.1, R1                        # Reading from field Quicksort.a
+  Move symbol1_i, R2                        # symbol1_i was i (Local variable)
+  MoveArray R1[R2], R0                      # Reading from array
+  # operand 2: 
+  Move symbol0_pivot, R1                    # symbol0_pivot was pivot (Local variable)
+  Move 1, R2                                # Comparison default
+  Compare R0, R1                            # Comparison
+  JumpG _comparison_binop_label0
+  Move 0, R2                                # Comparison not true
+_comparison_binop_label0:
+  # End of binop code: LT
+  Compare 0, R2                             # while condition
+  JumpTrue _while_end_label1
+  # While. Do:
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move symbol1_i, R0                        # symbol1_i was i (Local variable)
+  Add 1, R0                                 # Math operator
+  Move R0, symbol1_i                        # Assignment to local variable (was i)
+  Jump _while_test_label1
+  # End while
+_while_end_label1:
+  # While. Condition:
+_while_test_label2:
+  # Starting binop code: GT
+  # operand 1: 
+  Move this, R2                             # Getting ready to access 'this' class member
+  MoveField R2.1, R1                        # Reading from field Quicksort.a
+  Move symbol2_j, R2                        # symbol2_j was j (Local variable)
+  MoveArray R1[R2], R0                      # Reading from array
+  # operand 2: 
+  Move symbol0_pivot, R1                    # symbol0_pivot was pivot (Local variable)
+  Move 1, R2                                # Comparison default
+  Compare R0, R1                            # Comparison
+  JumpL _comparison_binop_label1
+  Move 0, R2                                # Comparison not true
+_comparison_binop_label1:
+  # End of binop code: GT
+  Compare 0, R2                             # while condition
+  JumpTrue _while_end_label2
+  # While. Do:
+  # Starting binop code: MINUS
+  # operand 1: 
+  Move symbol2_j, R0                        # symbol2_j was j (Local variable)
+  Sub 1, R0                                 # Math operator
+  Move R0, symbol2_j                        # Assignment to local variable (was j)
+  Jump _while_test_label2
+  # End while
+_while_end_label2:
+  # Starting if code. if:
+  # Starting binop code: GTE
+  # operand 1: 
+  Move symbol1_i, R0                        # symbol1_i was i (Local variable)
+  # operand 2: 
+  Move symbol2_j, R1                        # symbol2_j was j (Local variable)
+  Move 1, R2                                # Comparison default
+  Compare R0, R1                            # Comparison
+  JumpLE _comparison_binop_label2
+  Move 0, R2                                # Comparison not true
+_comparison_binop_label2:
+  # End of binop code: GTE
+  Compare 0, R2                             # if condition
+  JumpTrue _if_end_label0
+  # ... then:
+  Jump _while_end_label0                    # break
+  # ... endif.
+_if_end_label0:
+  Move this, R2                             # Getting ready to access 'this' class member
+  MoveField R2.1, R1                        # Reading from field Quicksort.a
+  Move symbol1_i, R2                        # symbol1_i was i (Local variable)
+  MoveArray R1[R2], R0                      # Reading from array
+  Move R0, symbol3_tmp                      # Assignment to local variable (was tmp)
+  Move this, R2                             # Getting ready to access 'this' class member
+  MoveField R2.1, R1                        # Reading from field Quicksort.a
+  Move symbol2_j, R2                        # symbol2_j was j (Local variable)
+  MoveArray R1[R2], R0                      # Reading from array
+  Move this, R2                             # Getting ready to access 'this' class member
+  MoveField R2.1, R1                        # Reading from field Quicksort.a
+  Move symbol1_i, R2                        # symbol1_i was i (Local variable)
+  MoveArray R0, R1[R2]                      # Assign to array
+  Move symbol3_tmp, R0                      # symbol3_tmp was tmp (Local variable)
+  Move this, R2                             # Getting ready to access 'this' class member
+  MoveField R2.1, R1                        # Reading from field Quicksort.a
+  Move symbol2_j, R2                        # symbol2_j was j (Local variable)
+  MoveArray R0, R1[R2]                      # Assign to array
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move symbol1_i, R0                        # symbol1_i was i (Local variable)
+  Add 1, R0                                 # Math operator
+  Move R0, symbol1_i                        # Assignment to local variable (was i)
+  # Starting binop code: MINUS
+  # operand 1: 
+  Move symbol2_j, R0                        # symbol2_j was j (Local variable)
+  Sub 1, R0                                 # Math operator
+  Move R0, symbol2_j                        # Assignment to local variable (was j)
+  Jump _while_test_label0
+  # End while
+_while_end_label0:
+  Move symbol2_j, R0                        # symbol2_j was j (Local variable)
+  Return R0
+  Return 9999
+
+
+# Method: quicksort() in class: Quicksort
+# ---------------------------------------
+_Quicksort_quicksort:
+  # Starting if code. if:
+  # Starting binop code: LT
+  # operand 1: 
+  Move low, R0                              # low was low (Parameter)
+  # operand 2: 
+  Move high, R1                             # high was high (Parameter)
+  Move 1, R2                                # Comparison default
+  Compare R0, R1                            # Comparison
+  JumpG _comparison_binop_label3
+  Move 0, R2                                # Comparison not true
+_comparison_binop_label3:
+  # End of binop code: LT
+  Compare 0, R2                             # if condition
+  JumpTrue _if_end_label1
+  # ... then:
+  Move low, R1                              # low was low (Parameter)
+  Move high, R2                             # high was high (Parameter)
+  Move this, R3                             # implicit this
+  VirtualCall R3.0(low=R1, high=R2), R0     # Calling virtual method Quicksort.partition()
+  Move R0, symbol4_mid                      # Init local variable (was mid)
+  Move low, R0                              # low was low (Parameter)
+  Move symbol4_mid, R1                      # symbol4_mid was mid (Local variable)
+  Move this, R2                             # implicit this
+  VirtualCall R2.1(low=R0, high=R1), Rdummy # Calling virtual method Quicksort.quicksort()
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move symbol4_mid, R0                      # symbol4_mid was mid (Local variable)
+  Add 1, R0                                 # Math operator
+  Move high, R1                             # high was high (Parameter)
+  Move this, R2                             # implicit this
+  VirtualCall R2.1(low=R0, high=R1), Rdummy # Calling virtual method Quicksort.quicksort()
+  # ... endif.
+_if_end_label1:
+  Return 9999
+
+
+# Method: initArray() in class: Quicksort
+# ---------------------------------------
+_Quicksort_initArray:
+  Move 0, R0                                # Integer literal
+  Move R0, symbol5_i                        # Init local variable (was i)
+  # While. Condition:
+_while_test_label3:
+  # Starting binop code: LT
+  # operand 1: 
+  Move symbol5_i, R0                        # symbol5_i was i (Local variable)
+  # operand 2: 
+  Move this, R3                             # Getting ready to access 'this' class member
+  MoveField R3.1, R2                        # Reading from field Quicksort.a
+  ArrayLength R2, R1                        # Array length
+  Move 1, R2                                # Comparison default
+  Compare R0, R1                            # Comparison
+  JumpG _comparison_binop_label4
+  Move 0, R2                                # Comparison not true
+_comparison_binop_label4:
+  # End of binop code: LT
+  Compare 0, R2                             # while condition
+  JumpTrue _while_end_label3
+  # While. Do:
+  # Starting binop code: MULTIPLY
+  # operand 1: 
+  # Starting binop code: MOD
+  # operand 1: 
+  Library __random(), R0
+  # operand 2: 
+  Move this, R3                             # Getting ready to access 'this' class member
+  MoveField R3.1, R2                        # Reading from field Quicksort.a
+  ArrayLength R2, R1                        # Array length
+  Mod R1, R0                                # Math operator
+  Mul 2, R0                                 # Math operator
+  Move this, R2                             # Getting ready to access 'this' class member
+  MoveField R2.1, R1                        # Reading from field Quicksort.a
+  Move symbol5_i, R2                        # symbol5_i was i (Local variable)
+  MoveArray R0, R1[R2]                      # Assign to array
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move symbol5_i, R0                        # symbol5_i was i (Local variable)
+  Add 1, R0                                 # Math operator
+  Move R0, symbol5_i                        # Assignment to local variable (was i)
+  Jump _while_test_label3
+  # End while
+_while_end_label3:
+  Return 9999
+
+
+# Method: printArray() in class: Quicksort
+# ----------------------------------------
+_Quicksort_printArray:
+  Move 0, R0                                # Integer literal
+  Move R0, symbol6_i                        # Init local variable (was i)
+  Move str1, R0                             # String literal
+  Library __print(R0), Rdummy
+  # While. Condition:
+_while_test_label4:
+  # Starting binop code: LT
+  # operand 1: 
+  Move symbol6_i, R0                        # symbol6_i was i (Local variable)
+  # operand 2: 
+  Move this, R3                             # Getting ready to access 'this' class member
+  MoveField R3.1, R2                        # Reading from field Quicksort.a
+  ArrayLength R2, R1                        # Array length
+  Move 1, R2                                # Comparison default
+  Compare R0, R1                            # Comparison
+  JumpG _comparison_binop_label5
+  Move 0, R2                                # Comparison not true
+_comparison_binop_label5:
+  # End of binop code: LT
+  Compare 0, R2                             # while condition
+  JumpTrue _while_end_label4
+  # While. Do:
+  Move this, R2                             # Getting ready to access 'this' class member
+  MoveField R2.1, R1                        # Reading from field Quicksort.a
+  Move symbol6_i, R2                        # symbol6_i was i (Local variable)
+  MoveArray R1[R2], R0                      # Reading from array
+  Library __printi(R0), Rdummy
+  Move str2, R0                             # String literal
+  Library __print(R0), Rdummy
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move symbol6_i, R0                        # symbol6_i was i (Local variable)
+  Add 1, R0                                 # Math operator
+  Move R0, symbol6_i                        # Assignment to local variable (was i)
+  Jump _while_test_label4
+  # End while
+_while_end_label4:
+  Move str3, R0                             # String literal
+  Library __println(R0), Rdummy
+  Return 9999
+
+
+# Method: main() in class: Quicksort
+# ----------------------------------
+_ic_main:
+  Move 1, R1                                # Integer literal
+  Mul 4, R1                                 # Array size is num_items * 4
+  Library __allocateArray(R1), R0
+  Move R0, symbol7_args                     # Init local variable (was args)
+  Move str4, R0                             # String literal
+  Move symbol7_args, R1                     # symbol7_args was args (Local variable)
+  Move 0, R2                                # Integer literal
+  MoveArray R0, R1[R2]                      # Assign to array
+  # Starting if code. if:
+  # Starting binop code: NEQUAL
+  # operand 1: 
+  Move symbol7_args, R1                     # symbol7_args was args (Local variable)
+  ArrayLength R1, R0                        # Array length
+  # operand 2: 
+  Move 1, R1                                # Integer literal
+  Move 1, R2                                # Comparison default
+  Compare R0, R1                            # Comparison
+  JumpFalse _comparison_binop_label6
+  Move 0, R2                                # Comparison not true
+_comparison_binop_label6:
+  # End of binop code: NEQUAL
+  Compare 0, R2                             # if condition
+  JumpTrue _if_end_label2
+  # ... then:
+  Move str5, R0                             # String literal
+  Library __println(R0), Rdummy
+  Move 1, R1                                # Integer literal
+  Library __exit(R1), R0
+  # ... endif.
+_if_end_label2:
+  Move symbol7_args, R2                     # symbol7_args was args (Local variable)
+  Move 0, R3                                # Integer literal
+  MoveArray R2[R3], R1                      # Reading from array
+  Library __stoi(R1), R0
+  Move R0, symbol8_n                        # Assignment to local variable (was n)
+  # Starting if code. if:
+  # Starting binop code: LTE
+  # operand 1: 
+  Move symbol8_n, R0                        # symbol8_n was n (Local variable)
+  # operand 2: 
+  Move 0, R1                                # Integer literal
+  Move 1, R2                                # Comparison default
+  Compare R0, R1                            # Comparison
+  JumpGE _comparison_binop_label7
+  Move 0, R2                                # Comparison not true
+_comparison_binop_label7:
+  # End of binop code: LTE
+  Compare 0, R2                             # if condition
+  JumpTrue _if_end_label3
+  # ... then:
+  Move str6, R0                             # String literal
+  Library __println(R0), Rdummy
+  Move 1, R1                                # Integer literal
+  Library __exit(R1), R0
+  # ... endif.
+_if_end_label3:
+  Library __allocateObject(8), R0
+  MoveField _DV_Quicksort, R0.0
+  Move R0, symbol9_s                        # Init local variable (was s)
+  Move symbol8_n, R1                        # symbol8_n was n (Local variable)
+  Mul 4, R1                                 # Array size is num_items * 4
+  Library __allocateArray(R1), R0
+  Move symbol9_s, R1                        # symbol9_s was s (Local variable)
+  MoveField R0, R1.1                        # Assign to field Quicksort.a
+  Move symbol9_s, R0                        # symbol9_s was s (Local variable)
+  VirtualCall R0.2(), Rdummy                # Calling virtual method Quicksort.initArray()
+  Move symbol9_s, R0                        # symbol9_s was s (Local variable)
+  VirtualCall R0.3(), Rdummy                # Calling virtual method Quicksort.printArray()
+  Move 0, R0                                # Integer literal
+  # Starting binop code: MINUS
+  # operand 1: 
+  Move symbol8_n, R1                        # symbol8_n was n (Local variable)
+  Sub 1, R1                                 # Math operator
+  Move symbol9_s, R2                        # symbol9_s was s (Local variable)
+  VirtualCall R2.1(low=R0, high=R1), Rdummy # Calling virtual method Quicksort.quicksort()
+  Move symbol9_s, R0                        # symbol9_s was s (Local variable)
+  VirtualCall R0.3(), Rdummy                # Calling virtual method Quicksort.printArray()
+  Library __exit(0), Rdummy                 # Exit from main

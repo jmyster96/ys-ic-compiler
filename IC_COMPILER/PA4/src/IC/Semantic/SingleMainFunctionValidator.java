@@ -112,6 +112,7 @@ public class SingleMainFunctionValidator implements Visitor {
 				|| formalType.getDimension() != 1) {
 			return -1;
 		}
+		method.setMain(true);
 		return method.getLine();
 	}
 

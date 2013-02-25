@@ -1,5 +1,7 @@
 package IC.AST;
 
+import IC.Symbols.Symbol;
+
 /**
  * Variable reference AST node.
  * 
@@ -59,5 +61,4 @@ public class VariableLocation extends Location {
 	public String getName() {
 		return name;
 	}
-
 }

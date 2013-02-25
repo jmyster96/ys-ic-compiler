@@ -1,0 +1,197 @@
+str1: " <-- expected false"
+str2: " <-- expected true"
+str3: " <-- i < j: expected true"
+str4: " <-- i <= j: expected true"
+str5: " <-- i > j: expected false"
+str6: " <-- i >= j: expected false"
+str7: " <-- i <= i: expected true"
+str8: " <-- i >= i: expected true"
+str9: " <-- j >= j: expected true"
+str10: " <-- j <= j: expected true"
+str11: " <-- j == j: expected true"
+str12: " <-- j != j: expected false"
+
+_DV_Comparisons: []
+
+  # 
+  # 
+  # Method: main() in class: Comparisons
+  # ------
+_ic_main:
+  Move 0, R1		# Integer literal
+  Move R1, i		# Init local variable
+  Move 10, R1		# Integer literal
+  Move R1, j		# Init local variable
+  # Starting binop code: EQUAL
+  # operand 1: 
+  Move i, R1		# Read local variable
+  # operand 2: 
+  Move j, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpTrue _comparison_binop_label0
+  Move 0, R3		# Comparison not true
+_comparison_binop_label0:
+  # End of binop code: EQUAL
+  Move R3, eq		# Init local variable
+  Move eq, R1		# Read local variable
+  Library __printb(R1), Rdummy
+  Move str1, R1		# String literal
+  Library __println(R1), Rdummy
+  # Starting binop code: NEQUAL
+  # operand 1: 
+  Move i, R1		# Read local variable
+  # operand 2: 
+  Move j, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpFalse _comparison_binop_label1
+  Move 0, R3		# Comparison not true
+_comparison_binop_label1:
+  # End of binop code: NEQUAL
+  Move R3, neq		# Init local variable
+  Move neq, R1		# Read local variable
+  Library __printb(R1), Rdummy
+  Move str2, R1		# String literal
+  Library __println(R1), Rdummy
+  # Starting binop code: LT
+  # operand 1: 
+  Move i, R1		# Read local variable
+  # operand 2: 
+  Move j, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpG _comparison_binop_label2
+  Move 0, R3		# Comparison not true
+_comparison_binop_label2:
+  # End of binop code: LT
+  Library __printb(R3), Rdummy
+  Move str3, R1		# String literal
+  Library __println(R1), Rdummy
+  # Starting binop code: LTE
+  # operand 1: 
+  Move i, R1		# Read local variable
+  # operand 2: 
+  Move j, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpGE _comparison_binop_label3
+  Move 0, R3		# Comparison not true
+_comparison_binop_label3:
+  # End of binop code: LTE
+  Library __printb(R3), Rdummy
+  Move str4, R1		# String literal
+  Library __println(R1), Rdummy
+  # Starting binop code: GT
+  # operand 1: 
+  Move i, R1		# Read local variable
+  # operand 2: 
+  Move j, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpL _comparison_binop_label4
+  Move 0, R3		# Comparison not true
+_comparison_binop_label4:
+  # End of binop code: GT
+  Library __printb(R3), Rdummy
+  Move str5, R1		# String literal
+  Library __println(R1), Rdummy
+  # Starting binop code: GT
+  # operand 1: 
+  Move i, R1		# Read local variable
+  # operand 2: 
+  Move j, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpL _comparison_binop_label5
+  Move 0, R3		# Comparison not true
+_comparison_binop_label5:
+  # End of binop code: GT
+  Library __printb(R3), Rdummy
+  Move str6, R1		# String literal
+  Library __println(R1), Rdummy
+  # Starting binop code: LTE
+  # operand 1: 
+  Move i, R1		# Read local variable
+  # operand 2: 
+  Move i, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpGE _comparison_binop_label6
+  Move 0, R3		# Comparison not true
+_comparison_binop_label6:
+  # End of binop code: LTE
+  Library __printb(R3), Rdummy
+  Move str7, R1		# String literal
+  Library __println(R1), Rdummy
+  # Starting binop code: GTE
+  # operand 1: 
+  Move i, R1		# Read local variable
+  # operand 2: 
+  Move i, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpLE _comparison_binop_label7
+  Move 0, R3		# Comparison not true
+_comparison_binop_label7:
+  # End of binop code: GTE
+  Library __printb(R3), Rdummy
+  Move str8, R1		# String literal
+  Library __println(R1), Rdummy
+  # Starting binop code: GTE
+  # operand 1: 
+  Move j, R1		# Read local variable
+  # operand 2: 
+  Move j, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpLE _comparison_binop_label8
+  Move 0, R3		# Comparison not true
+_comparison_binop_label8:
+  # End of binop code: GTE
+  Library __printb(R3), Rdummy
+  Move str9, R1		# String literal
+  Library __println(R1), Rdummy
+  # Starting binop code: LTE
+  # operand 1: 
+  Move j, R1		# Read local variable
+  # operand 2: 
+  Move j, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpGE _comparison_binop_label9
+  Move 0, R3		# Comparison not true
+_comparison_binop_label9:
+  # End of binop code: LTE
+  Library __printb(R3), Rdummy
+  Move str10, R1		# String literal
+  Library __println(R1), Rdummy
+  # Starting binop code: EQUAL
+  # operand 1: 
+  Move j, R1		# Read local variable
+  # operand 2: 
+  Move j, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpTrue _comparison_binop_label10
+  Move 0, R3		# Comparison not true
+_comparison_binop_label10:
+  # End of binop code: EQUAL
+  Library __printb(R3), Rdummy
+  Move str11, R1		# String literal
+  Library __println(R1), Rdummy
+  # Starting binop code: NEQUAL
+  # operand 1: 
+  Move j, R1		# Read local variable
+  # operand 2: 
+  Move j, R2		# Read local variable
+  Move 1, R3		# Comparison default
+  Compare R1, R2		# Comparison
+  JumpFalse _comparison_binop_label11
+  Move 0, R3		# Comparison not true
+_comparison_binop_label11:
+  # End of binop code: NEQUAL
+  Library __printb(R3), Rdummy
+  Move str12, R1		# String literal
+  Library __println(R1), Rdummy
+  Library __exit(0), Rdummy		# Exit from main

@@ -1,0 +1,48 @@
+class Animal {
+  void makeNoise() {
+    Library.println("Animal making noise.");
+  }
+  void nothing() {}
+  string baseClassField;
+}
+class Dog extends Animal {
+  void makeNoise() {
+    Library.println("Woof woof!");
+  }
+  void jump() {
+    Library.println("Jump!");
+  }
+  void gnarl() {
+    Library.println("Rrr....");
+  }
+  string secondClassField;
+}
+class Bulldog extends Dog {
+  int teethSize;
+  void gnarl() {
+    Library.println("Rrrrararar!! Bulldog!!..");
+  }
+  int thirdClassSecondField;
+}
+class Tester {
+  static void main(string[] args) {
+    Animal a = new Dog();
+    a.makeNoise();
+    a = new Animal();
+    a.makeNoise();
+    Dog d = new Dog();
+    Bulldog b = new Bulldog();
+    Bulldog c = new Bulldog();
+    c.teethSize = 7;
+    b.teethSize = c.teethSize;
+    Library.printi(b.teethSize);
+    b.makeNoise();
+    c.makeNoise();
+    b.gnarl();
+    c.gnarl();
+    d.gnarl();
+    d.secondClassField = "secondClassField";
+    c.thirdClassSecondField = 5;
+    b.baseClassField = d.secondClassField;
+  }
+}

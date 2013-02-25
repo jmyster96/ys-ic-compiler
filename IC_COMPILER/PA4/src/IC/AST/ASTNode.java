@@ -2,6 +2,7 @@ package IC.AST;
 
 import IC.Semantic.SemanticError;
 import IC.SymbolTypes.SymbolType;
+import IC.Symbols.Symbol;
 import IC.Symbols.SymbolTable;
 
 /**
@@ -12,6 +13,8 @@ import IC.Symbols.SymbolTable;
 public abstract class ASTNode {
 
 	private int line;
+
+	Symbol symbol;
 	private SymbolTable enclosingScope;
 	private SymbolType symbolType;
 
@@ -46,16 +49,24 @@ public abstract class ASTNode {
 	public SymbolTable getEnclosingScope() {
 		return enclosingScope;
 	}
-	
+
 	public void setEnclosingScope(SymbolTable enclosingScope) {
 		this.enclosingScope = enclosingScope;
 	}
-	
+
 	public SymbolType getSymbolType() {
 		return symbolType;
 	}
 
 	public void setSymbolType(SymbolType symbolType) {
 		this.symbolType = symbolType;
+	}
+
+	public Symbol getSymbol() {
+		return symbol;
+	}
+
+	public void setSymbol(Symbol symbol) {
+		this.symbol = symbol;
 	}
 }

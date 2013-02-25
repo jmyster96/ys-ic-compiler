@@ -19,6 +19,8 @@ public abstract class Method extends ASTNode {
 
 	protected List<Statement> statements;
 
+	private boolean isMain;
+
 	/**
 	 * Constructs a new method node. Used by subclasses.
 	 * 
@@ -54,5 +56,13 @@ public abstract class Method extends ASTNode {
 
 	public List<Statement> getStatements() {
 		return statements;
+	}
+
+	public boolean isMain() {
+		return isMain;
+	}
+
+	public void setMain(boolean isMain) {
+		this.isMain = isMain;
 	}
 }

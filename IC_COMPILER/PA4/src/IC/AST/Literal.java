@@ -64,9 +64,8 @@ public class Literal extends Expression {
 	public String getQuotedString() {
 		String unquoted = value.toString();
 		return "\""
-				+ unquoted.replace("\n", "\\n").replace("\t", "\\t")
-						.replace("\\", "\\\\").replace("\"", "\\\"")
-						.replace("\'", "\\\'") + "\"";
+				+ unquoted.replace("\\", "\\\\").replace("\n", "\\n")
+						.replace("\t", "\\t").replace("\"", "\\\"") + "\"";
 	}
 
 	public void setValue(Integer value) {

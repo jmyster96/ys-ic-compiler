@@ -1,0 +1,15 @@
+class CalcTester {
+  static void main(string[] args) {
+    int i = (5 + 3 * 2) * (9 + (7 - 5));
+    Library.printi(i);
+    Library.println(" <-- should be 121");
+    
+    int j = (1 + (1 + (1 + (1 + 1))));
+    Library.printi(j);
+    Library.println(" <-- should be 5");
+    
+    int k = ((((1 + 1) + 1) + 1) + 1);
+    Library.printi(k);
+    Library.println(" <-- should be 5");
+  }
+}

@@ -1,0 +1,80 @@
+str1: " <-- should be 121"
+str2: " <-- should be 5"
+
+_DV_CalcTester: []
+
+
+
+# Method: main() in class: CalcTester
+# -----------------------------------
+_ic_main:
+  # Starting binop code: MULTIPLY
+  # operand 1: 
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move 5, R0                # Integer literal
+  # operand 2: 
+  # Starting binop code: MULTIPLY
+  # operand 1: 
+  Move 3, R1                # Integer literal
+  Mul 2, R1                 # Math operator
+  Add R1, R0                # Math operator
+  # operand 2: 
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move 9, R1                # Integer literal
+  # operand 2: 
+  # Starting binop code: MINUS
+  # operand 1: 
+  Move 7, R2                # Integer literal
+  Sub 5, R2                 # Math operator
+  Add R2, R1                # Math operator
+  Mul R1, R0                # Math operator
+  Move R0, symbol0_i        # Init local variable (was i)
+  Move symbol0_i, R0        # symbol0_i was i (Local variable)
+  Library __printi(R0), Rdummy
+  Move str1, R0             # String literal
+  Library __println(R0), Rdummy
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move 1, R0                # Integer literal
+  # operand 2: 
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move 1, R1                # Integer literal
+  # operand 2: 
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move 1, R2                # Integer literal
+  # operand 2: 
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move 1, R3                # Integer literal
+  Add 1, R3                 # Math operator
+  Add R3, R2                # Math operator
+  Add R2, R1                # Math operator
+  Add R1, R0                # Math operator
+  Move R0, symbol1_j        # Init local variable (was j)
+  Move symbol1_j, R0        # symbol1_j was j (Local variable)
+  Library __printi(R0), Rdummy
+  Move str2, R0             # String literal
+  Library __println(R0), Rdummy
+  # Starting binop code: PLUS
+  # operand 1: 
+  # Starting binop code: PLUS
+  # operand 1: 
+  # Starting binop code: PLUS
+  # operand 1: 
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move 1, R0                # Integer literal
+  Add 1, R0                 # Math operator
+  Add 1, R0                 # Math operator
+  Add 1, R0                 # Math operator
+  Add 1, R0                 # Math operator
+  Move R0, symbol2_k        # Init local variable (was k)
+  Move symbol2_k, R0        # symbol2_k was k (Local variable)
+  Library __printi(R0), Rdummy
+  Move str2, R0             # String literal
+  Library __println(R0), Rdummy
+  Library __exit(0), Rdummy # Exit from main
