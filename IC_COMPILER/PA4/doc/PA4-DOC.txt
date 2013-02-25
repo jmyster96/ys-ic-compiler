@@ -13,11 +13,14 @@ New in this PA:
 
 package LIR:
 
-1. class TranslatorVisitor
--------------------------- 
+class TranslatorVisitor
+----------------------- 
 Implements PropagatingVisitor<TranslatorVisitorContext, LIRCode>.
-Translates all AST nodes to LIR code.  
+Translates all AST nodes to LIR code. 
 
+class ClassLayout
+-----------------
+Takes care of keeping the field / method offsets across inheritance.
 
 
 ________________
@@ -38,6 +41,8 @@ might have missed some tests).
 _______
 BONUSES
 
+Bonus 1: Implemented for literals.
+
 Bonus 2: Registers are reused. The implementation is courteous: each time an
 expression is calculated, the client of the value needs to free the target 
 register of the sub-expression.
@@ -53,4 +58,9 @@ KNOWN ISSUES
 1. A 'Return 9999' statement is added at the end of every function call. That's
    because our semantic checker doesn't check that there's always a return
    statement.
-
+2. Although hiding protection is implemented, a very malicious user might be able
+   to bypass it. That is, if one creates a method parameter called symbol1_i and
+   a local variable called i, which happens to be the second symbol in the program,
+   it will cause hiding in the translated LIR code.
+3. Same with labels: a malicious user can cause two labels with the same name in
+   the translation.  
