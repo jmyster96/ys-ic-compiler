@@ -27,7 +27,13 @@ ________________
 TESTING STRATEGY
 
 A handy script that runs the IC compiler on an input file, and then
-automatically calls microLIR simulator on the translation. 
+automatically calls microLIR simulator on the translation.
+
+Made tests for some cases, see:
+test/Calculations.ic
+test/Quicksort.ic
+test/Sieve.ic
+test/VirtualTests.ic
 
 _______________
 ERROR REPORTING

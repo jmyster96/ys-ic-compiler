@@ -50,7 +50,6 @@ _comparison_binop_label0:
   # operand 1: 
   Move symbol0_i, R0                # symbol0_i was i (Local variable)
   Add 1, R0                         # Math operator
-  # End of binop code: PLUS
   Move R0, symbol0_i                # Assignment to local variable (was i)
   Jump _while_test_label0
   # End while
@@ -90,7 +89,6 @@ _comparison_binop_label1:
   # operand 1: 
   Move symbol1_i, R0                # symbol1_i was i (Local variable)
   Add 1, R0                         # Math operator
-  # End of binop code: PLUS
   Move R0, symbol1_i                # Assignment to local variable (was i)
   Jump _while_test_label1
   # End while
@@ -107,7 +105,6 @@ _Sieve_sieve:
   # operand 2: 
   Move n, R1                        # n was n (Parameter)
   Mul R1, R0                        # Math operator
-  # End of binop code: MULTIPLY
   Move R0, symbol2_i                # Init local variable (was i)
   # While. Condition:
 _while_test_label2:
@@ -138,7 +135,6 @@ _comparison_binop_label2:
   # operand 2: 
   Move n, R1                        # n was n (Parameter)
   Add R1, R0                        # Math operator
-  # End of binop code: PLUS
   Move R0, symbol2_i                # Assignment to local variable (was i)
   Jump _while_test_label2
   # End while
@@ -210,7 +206,6 @@ _if_end_label0:
   # operand 1: 
   Move symbol3_i, R0                # symbol3_i was i (Local variable)
   Add 1, R0                         # Math operator
-  # End of binop code: PLUS
   Move R0, symbol3_i                # Assignment to local variable (was i)
   Jump _while_test_label3
   # End while

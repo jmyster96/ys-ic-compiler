@@ -12,102 +12,102 @@ _DV_Tester: []
 
 
 
-  # Method: makeNoise() in class: Animal
-  # ------
+# Method: makeNoise() in class: Animal
+# ------------------------------------
 _Animal_makeNoise:
   Move str1, R0              # String literal
   Library __println(R0), Rdummy
   Return 9999
 
 
-  # Method: nothing() in class: Animal
-  # ------
+# Method: nothing() in class: Animal
+# ----------------------------------
 _Animal_nothing:
   Return 9999
 
 
-  # Method: makeNoise() in class: Dog
-  # ------
+# Method: makeNoise() in class: Dog
+# ---------------------------------
 _Dog_makeNoise:
   Move str2, R0              # String literal
   Library __println(R0), Rdummy
   Return 9999
 
 
-  # Method: jump() in class: Dog
-  # ------
+# Method: jump() in class: Dog
+# ----------------------------
 _Dog_jump:
   Move str3, R0              # String literal
   Library __println(R0), Rdummy
   Return 9999
 
 
-  # Method: gnarl() in class: Dog
-  # ------
+# Method: gnarl() in class: Dog
+# -----------------------------
 _Dog_gnarl:
   Move str4, R0              # String literal
   Library __println(R0), Rdummy
   Return 9999
 
 
-  # Method: gnarl() in class: Bulldog
-  # ------
+# Method: gnarl() in class: Bulldog
+# ---------------------------------
 _Bulldog_gnarl:
   Move str5, R0              # String literal
   Library __println(R0), Rdummy
   Return 9999
 
 
-  # Method: main() in class: Tester
-  # ------
+# Method: main() in class: Tester
+# -------------------------------
 _ic_main:
   Library __allocateObject(16), R0
   MoveField _DV_Dog, R0.0
-  Move R0, a                 # Init local variable
-  Move a, R0                 # Read local variable
+  Move R0, symbol0_a         # Init local variable (was a)
+  Move symbol0_a, R0         # symbol0_a was a (Local variable)
   VirtualCall R0.0(), Rdummy # Calling virtual method Animal.makeNoise()
   Library __allocateObject(8), R0
   MoveField _DV_Animal, R0.0
-  Move R0, a                 # Assignment to local variable
-  Move a, R0                 # Read local variable
+  Move R0, symbol0_a         # Assignment to local variable (was a)
+  Move symbol0_a, R0         # symbol0_a was a (Local variable)
   VirtualCall R0.0(), Rdummy # Calling virtual method Animal.makeNoise()
   Library __allocateObject(16), R0
   MoveField _DV_Dog, R0.0
-  Move R0, d                 # Init local variable
+  Move R0, symbol1_d         # Init local variable (was d)
   Library __allocateObject(32), R0
   MoveField _DV_Bulldog, R0.0
-  Move R0, b                 # Init local variable
+  Move R0, symbol2_b         # Init local variable (was b)
   Library __allocateObject(32), R0
   MoveField _DV_Bulldog, R0.0
-  Move R0, c                 # Init local variable
+  Move R0, symbol3_c         # Init local variable (was c)
   Move 7, R0                 # Integer literal
-  Move c, R1                 # Read local variable
+  Move symbol3_c, R1         # symbol3_c was c (Local variable)
   MoveField R0, R1.3         # Assign to field Bulldog.teethSize
-  Move c, R1                 # Read local variable
+  Move symbol3_c, R1         # symbol3_c was c (Local variable)
   MoveField R1.3, R0         # Reading from field Bulldog.teethSize
-  Move b, R1                 # Read local variable
+  Move symbol2_b, R1         # symbol2_b was b (Local variable)
   MoveField R0, R1.3         # Assign to field Bulldog.teethSize
-  Move b, R1                 # Read local variable
+  Move symbol2_b, R1         # symbol2_b was b (Local variable)
   MoveField R1.3, R0         # Reading from field Bulldog.teethSize
   Library __printi(R0), Rdummy
-  Move b, R0                 # Read local variable
+  Move symbol2_b, R0         # symbol2_b was b (Local variable)
   VirtualCall R0.0(), Rdummy # Calling virtual method Dog.makeNoise()
-  Move c, R0                 # Read local variable
+  Move symbol3_c, R0         # symbol3_c was c (Local variable)
   VirtualCall R0.0(), Rdummy # Calling virtual method Dog.makeNoise()
-  Move b, R0                 # Read local variable
+  Move symbol2_b, R0         # symbol2_b was b (Local variable)
   VirtualCall R0.3(), Rdummy # Calling virtual method Bulldog.gnarl()
-  Move c, R0                 # Read local variable
+  Move symbol3_c, R0         # symbol3_c was c (Local variable)
   VirtualCall R0.3(), Rdummy # Calling virtual method Bulldog.gnarl()
-  Move d, R0                 # Read local variable
+  Move symbol1_d, R0         # symbol1_d was d (Local variable)
   VirtualCall R0.3(), Rdummy # Calling virtual method Dog.gnarl()
   Move str6, R0              # String literal
-  Move d, R1                 # Read local variable
+  Move symbol1_d, R1         # symbol1_d was d (Local variable)
   MoveField R0, R1.2         # Assign to field Dog.secondClassField
   Move 5, R0                 # Integer literal
-  Move c, R1                 # Read local variable
+  Move symbol3_c, R1         # symbol3_c was c (Local variable)
   MoveField R0, R1.4         # Assign to field Bulldog.thirdClassSecondField
-  Move d, R1                 # Read local variable
+  Move symbol1_d, R1         # symbol1_d was d (Local variable)
   MoveField R1.2, R0         # Reading from field Dog.secondClassField
-  Move b, R1                 # Read local variable
+  Move symbol2_b, R1         # symbol2_b was b (Local variable)
   MoveField R0, R1.1         # Assign to field Bulldog.baseClassField
   Library __exit(0), Rdummy  # Exit from main
