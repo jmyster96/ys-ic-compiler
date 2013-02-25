@@ -6,8 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import com.sun.tools.javac.util.Pair;
-
 import IC.AST.Field;
 import IC.AST.ICClass;
 import IC.AST.Method;
@@ -48,7 +46,7 @@ public class ClassLayout {
 			for (Pair<String, String> methodNameAndLabel : baseClassLayout.methodNamesAndLabelsInOrder) {
 				methodNamesAndLabelsInOrder.add(new Pair<String, String>(
 						methodNameAndLabel.fst, methodNameToLabel
-								.get(methodNameAndLabel.fst)));
+								.get(methodNameAndLabel.snd)));
 			}
 		}
 		for (Method method : clazz.getMethods()) {
@@ -137,5 +135,15 @@ public class ClassLayout {
 			printErrorMessage("Compiler unexpected error: a scope is supposed to be present.");
 		}
 		return fieldToOffset.get(name);
+	}
+
+	class Pair<X, Y> {
+		final X fst;
+		final Y snd;
+
+		Pair(X fst, Y snd) {
+			this.fst = fst;
+			this.snd = snd;
+		}
 	}
 }
