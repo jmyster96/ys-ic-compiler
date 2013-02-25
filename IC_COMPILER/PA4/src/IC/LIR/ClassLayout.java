@@ -28,10 +28,10 @@ public class ClassLayout {
 	public ClassLayout(ICClass clazz, ClassLayout baseClassLayout) {
 		this.baseClassLayout = baseClassLayout;
 		if (baseClassLayout != null) {
-			for (String baseMethodName : baseClassLayout.methodNameToLabel
-					.keySet()) {
-				methodNameToLabel.put(baseMethodName,
-						baseClassLayout.methodNameToLabel.get(baseMethodName));
+			for (Entry<String, String> nameToLabelInBase : baseClassLayout.methodNameToLabel
+					.entrySet()) {
+				methodNameToLabel.put(nameToLabelInBase.getKey(),
+						nameToLabelInBase.getValue());
 			}
 		}
 		for (Method method : clazz.getMethods()) {
@@ -46,7 +46,7 @@ public class ClassLayout {
 			for (Pair<String, String> methodNameAndLabel : baseClassLayout.methodNamesAndLabelsInOrder) {
 				methodNamesAndLabelsInOrder.add(new Pair<String, String>(
 						methodNameAndLabel.fst, methodNameToLabel
-								.get(methodNameAndLabel.snd)));
+								.get(methodNameAndLabel.fst)));
 			}
 		}
 		for (Method method : clazz.getMethods()) {
