@@ -985,9 +985,13 @@ public class TranslatorVisitor implements
 	public LIRCode visit(LogicalUnaryOp unaryOp,
 			TranslatorVisitorContext context) {
 		LIRCode operand = unaryOp.getOperand().accept(this, context);
-		LIRCode result = new ResultLIRCode(operand.getTargetRegister());
+		LIRCode result = newResultLR(context);
 		result.addCommandsFromOtherLr(operand, unaryOp.getOperand());
-		result.addJumpCommand("Not", result.getTargetRegister());
+		result.addCommand("Move", "1", result.getTargetRegister(),
+				"Unary negation");
+		result.addCommand("Sub", operand.getTargetRegister(),
+				result.getTargetRegister(), "Unary negation");
+		freeTempRegister(context, operand);
 		return result;
 	}
 
@@ -1018,7 +1022,7 @@ public class TranslatorVisitor implements
 				indexOf = this.stringLiterals.size() - 1;
 			}
 			codeResult.addCommand("Move", "str" + (indexOf + 1),
-					codeResult.getTargetRegister(), "String literal");
+					codeResult.getTargetRegister(), "String literal: " + val);
 			break;
 		case TRUE:
 			codeResult.addCommand("Move", "1", codeResult.getTargetRegister(),

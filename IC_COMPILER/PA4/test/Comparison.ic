@@ -28,5 +28,14 @@ class Comparisons {
     Library.println(" <-- j == j: expected true");
     Library.printb(j != j);
     Library.println(" <-- j != j: expected false");
+    Library.printb(!(j != j));
+    Library.println(" <-- !(j != j): expected true");
+    Library.printb(!(j == j));
+    Library.println(" <-- !(j == j): expected false");
+    Library.printb(!(i <= j));
+    Library.println(" <-- !(i <= j): expected false");
+    Library.printb(!(i > j));
+    Library.println(" <-- !(i > j): expected true");
+    Library.printi(-(5+-6));
   }
 }

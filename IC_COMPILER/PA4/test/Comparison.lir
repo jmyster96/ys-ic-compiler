@@ -10,188 +10,265 @@ str9: " <-- j >= j: expected true"
 str10: " <-- j <= j: expected true"
 str11: " <-- j == j: expected true"
 str12: " <-- j != j: expected false"
+str13: " <-- !(j != j): expected true"
+str14: " <-- !(j == j): expected false"
+str15: " <-- !(i <= j): expected false"
+str16: " <-- !(i > j): expected true"
 
 _DV_Comparisons: []
 
-  # 
-  # 
-  # Method: main() in class: Comparisons
-  # ------
+
+
+# Method: main() in class: Comparisons
+# ------------------------------------
 _ic_main:
-  Move 0, R1		# Integer literal
-  Move R1, i		# Init local variable
-  Move 10, R1		# Integer literal
-  Move R1, j		# Init local variable
+  Move 0, R0                # Integer literal
+  Move R0, symbol0_i        # Init local variable (was i)
+  Move 10, R0               # Integer literal
+  Move R0, symbol1_j        # Init local variable (was j)
   # Starting binop code: EQUAL
   # operand 1: 
-  Move i, R1		# Read local variable
+  Move symbol0_i, R0        # symbol0_i was i (Local variable)
   # operand 2: 
-  Move j, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpTrue _comparison_binop_label0
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label0:
   # End of binop code: EQUAL
-  Move R3, eq		# Init local variable
-  Move eq, R1		# Read local variable
-  Library __printb(R1), Rdummy
-  Move str1, R1		# String literal
-  Library __println(R1), Rdummy
+  Move R2, symbol2_eq       # Init local variable (was eq)
+  Move symbol2_eq, R0       # symbol2_eq was eq (Local variable)
+  Library __printb(R0), Rdummy
+  Move str1, R0             # String literal: " <-- expected false"
+  Library __println(R0), Rdummy
   # Starting binop code: NEQUAL
   # operand 1: 
-  Move i, R1		# Read local variable
+  Move symbol0_i, R0        # symbol0_i was i (Local variable)
   # operand 2: 
-  Move j, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpFalse _comparison_binop_label1
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label1:
   # End of binop code: NEQUAL
-  Move R3, neq		# Init local variable
-  Move neq, R1		# Read local variable
-  Library __printb(R1), Rdummy
-  Move str2, R1		# String literal
-  Library __println(R1), Rdummy
+  Move R2, symbol3_neq      # Init local variable (was neq)
+  Move symbol3_neq, R0      # symbol3_neq was neq (Local variable)
+  Library __printb(R0), Rdummy
+  Move str2, R0             # String literal: " <-- expected true"
+  Library __println(R0), Rdummy
   # Starting binop code: LT
   # operand 1: 
-  Move i, R1		# Read local variable
+  Move symbol0_i, R0        # symbol0_i was i (Local variable)
   # operand 2: 
-  Move j, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpG _comparison_binop_label2
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label2:
   # End of binop code: LT
-  Library __printb(R3), Rdummy
-  Move str3, R1		# String literal
-  Library __println(R1), Rdummy
+  Library __printb(R2), Rdummy
+  Move str3, R0             # String literal: " <-- i < j: expected true"
+  Library __println(R0), Rdummy
   # Starting binop code: LTE
   # operand 1: 
-  Move i, R1		# Read local variable
+  Move symbol0_i, R0        # symbol0_i was i (Local variable)
   # operand 2: 
-  Move j, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpGE _comparison_binop_label3
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label3:
   # End of binop code: LTE
-  Library __printb(R3), Rdummy
-  Move str4, R1		# String literal
-  Library __println(R1), Rdummy
+  Library __printb(R2), Rdummy
+  Move str4, R0             # String literal: " <-- i <= j: expected true"
+  Library __println(R0), Rdummy
   # Starting binop code: GT
   # operand 1: 
-  Move i, R1		# Read local variable
+  Move symbol0_i, R0        # symbol0_i was i (Local variable)
   # operand 2: 
-  Move j, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpL _comparison_binop_label4
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label4:
   # End of binop code: GT
-  Library __printb(R3), Rdummy
-  Move str5, R1		# String literal
-  Library __println(R1), Rdummy
+  Library __printb(R2), Rdummy
+  Move str5, R0             # String literal: " <-- i > j: expected false"
+  Library __println(R0), Rdummy
   # Starting binop code: GT
   # operand 1: 
-  Move i, R1		# Read local variable
+  Move symbol0_i, R0        # symbol0_i was i (Local variable)
   # operand 2: 
-  Move j, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpL _comparison_binop_label5
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label5:
   # End of binop code: GT
-  Library __printb(R3), Rdummy
-  Move str6, R1		# String literal
-  Library __println(R1), Rdummy
+  Library __printb(R2), Rdummy
+  Move str6, R0             # String literal: " <-- i >= j: expected false"
+  Library __println(R0), Rdummy
   # Starting binop code: LTE
   # operand 1: 
-  Move i, R1		# Read local variable
+  Move symbol0_i, R0        # symbol0_i was i (Local variable)
   # operand 2: 
-  Move i, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol0_i, R1        # symbol0_i was i (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpGE _comparison_binop_label6
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label6:
   # End of binop code: LTE
-  Library __printb(R3), Rdummy
-  Move str7, R1		# String literal
-  Library __println(R1), Rdummy
+  Library __printb(R2), Rdummy
+  Move str7, R0             # String literal: " <-- i <= i: expected true"
+  Library __println(R0), Rdummy
   # Starting binop code: GTE
   # operand 1: 
-  Move i, R1		# Read local variable
+  Move symbol0_i, R0        # symbol0_i was i (Local variable)
   # operand 2: 
-  Move i, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol0_i, R1        # symbol0_i was i (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpLE _comparison_binop_label7
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label7:
   # End of binop code: GTE
-  Library __printb(R3), Rdummy
-  Move str8, R1		# String literal
-  Library __println(R1), Rdummy
+  Library __printb(R2), Rdummy
+  Move str8, R0             # String literal: " <-- i >= i: expected true"
+  Library __println(R0), Rdummy
   # Starting binop code: GTE
   # operand 1: 
-  Move j, R1		# Read local variable
+  Move symbol1_j, R0        # symbol1_j was j (Local variable)
   # operand 2: 
-  Move j, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpLE _comparison_binop_label8
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label8:
   # End of binop code: GTE
-  Library __printb(R3), Rdummy
-  Move str9, R1		# String literal
-  Library __println(R1), Rdummy
+  Library __printb(R2), Rdummy
+  Move str9, R0             # String literal: " <-- j >= j: expected true"
+  Library __println(R0), Rdummy
   # Starting binop code: LTE
   # operand 1: 
-  Move j, R1		# Read local variable
+  Move symbol1_j, R0        # symbol1_j was j (Local variable)
   # operand 2: 
-  Move j, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpGE _comparison_binop_label9
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label9:
   # End of binop code: LTE
-  Library __printb(R3), Rdummy
-  Move str10, R1		# String literal
-  Library __println(R1), Rdummy
+  Library __printb(R2), Rdummy
+  Move str10, R0            # String literal: " <-- j <= j: expected true"
+  Library __println(R0), Rdummy
   # Starting binop code: EQUAL
   # operand 1: 
-  Move j, R1		# Read local variable
+  Move symbol1_j, R0        # symbol1_j was j (Local variable)
   # operand 2: 
-  Move j, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpTrue _comparison_binop_label10
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label10:
   # End of binop code: EQUAL
-  Library __printb(R3), Rdummy
-  Move str11, R1		# String literal
-  Library __println(R1), Rdummy
+  Library __printb(R2), Rdummy
+  Move str11, R0            # String literal: " <-- j == j: expected true"
+  Library __println(R0), Rdummy
   # Starting binop code: NEQUAL
   # operand 1: 
-  Move j, R1		# Read local variable
+  Move symbol1_j, R0        # symbol1_j was j (Local variable)
   # operand 2: 
-  Move j, R2		# Read local variable
-  Move 1, R3		# Comparison default
-  Compare R1, R2		# Comparison
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
   JumpFalse _comparison_binop_label11
-  Move 0, R3		# Comparison not true
+  Move 0, R2                # Comparison not true
 _comparison_binop_label11:
   # End of binop code: NEQUAL
-  Library __printb(R3), Rdummy
-  Move str12, R1		# String literal
-  Library __println(R1), Rdummy
-  Library __exit(0), Rdummy		# Exit from main
+  Library __printb(R2), Rdummy
+  Move str12, R0            # String literal: " <-- j != j: expected false"
+  Library __println(R0), Rdummy
+  # Starting binop code: NEQUAL
+  # operand 1: 
+  Move symbol1_j, R0        # symbol1_j was j (Local variable)
+  # operand 2: 
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
+  JumpFalse _comparison_binop_label12
+  Move 0, R2                # Comparison not true
+_comparison_binop_label12:
+  # End of binop code: NEQUAL
+  Move 1, R0                # Unary negation
+  Sub R2, R0                # Unary negation
+  Library __printb(R0), Rdummy
+  Move str13, R0            # String literal: " <-- !(j != j): expected true"
+  Library __println(R0), Rdummy
+  # Starting binop code: EQUAL
+  # operand 1: 
+  Move symbol1_j, R0        # symbol1_j was j (Local variable)
+  # operand 2: 
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
+  JumpTrue _comparison_binop_label13
+  Move 0, R2                # Comparison not true
+_comparison_binop_label13:
+  # End of binop code: EQUAL
+  Move 1, R0                # Unary negation
+  Sub R2, R0                # Unary negation
+  Library __printb(R0), Rdummy
+  Move str14, R0            # String literal: " <-- !(j == j): expected false"
+  Library __println(R0), Rdummy
+  # Starting binop code: LTE
+  # operand 1: 
+  Move symbol0_i, R0        # symbol0_i was i (Local variable)
+  # operand 2: 
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
+  JumpGE _comparison_binop_label14
+  Move 0, R2                # Comparison not true
+_comparison_binop_label14:
+  # End of binop code: LTE
+  Move 1, R0                # Unary negation
+  Sub R2, R0                # Unary negation
+  Library __printb(R0), Rdummy
+  Move str15, R0            # String literal: " <-- !(i <= j): expected false"
+  Library __println(R0), Rdummy
+  # Starting binop code: GT
+  # operand 1: 
+  Move symbol0_i, R0        # symbol0_i was i (Local variable)
+  # operand 2: 
+  Move symbol1_j, R1        # symbol1_j was j (Local variable)
+  Move 1, R2                # Comparison default
+  Compare R0, R1            # Comparison
+  JumpL _comparison_binop_label15
+  Move 0, R2                # Comparison not true
+_comparison_binop_label15:
+  # End of binop code: GT
+  Move 1, R0                # Unary negation
+  Sub R2, R0                # Unary negation
+  Library __printb(R0), Rdummy
+  Move str16, R0            # String literal: " <-- !(i > j): expected true"
+  Library __println(R0), Rdummy
+  # Starting binop code: PLUS
+  # operand 1: 
+  Move 5, R0                # Integer literal
+  # operand 2: 
+  Move 6, R1                # Integer literal
+  Neg R1
+  Add R1, R0                # Math operator
+  Neg R0
+  Library __printi(R0), Rdummy
+  Library __exit(0), Rdummy # Exit from main
